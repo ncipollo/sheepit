@@ -1,0 +1,13 @@
+[package]
+name = "ship_it"
+description = "A simple rust tool for releasing projects 🚀"
+
+edition = "2021"
+license = "MIT"
+readme = "README.md"
+repository = "https://github.com/ncipollo/ship_it"
+version = "0.1.0"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
