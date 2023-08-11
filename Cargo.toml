@@ -12,7 +12,8 @@ version = "0.0.1"
 
 [dependencies]
 git2 = "0.17.2"
-sequoia-openpgp = "1.16.0"
+git2-ext = "0.6.0"
+rpassword = "7.2"
 shellexpand = "3.1.0"
 tempfile = "3"
 

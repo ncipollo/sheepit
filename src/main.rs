@@ -1,11 +1,10 @@
+use std::io;
 use sheepit::sheep_test;
 
 fn main() {
-    let dir = tempfile::tempdir().
-        expect("unable to create tmp dir");
-    let path = dir.path();
-    println!("{:#?}", path);
-    println!("Hello, world!");
+    sheep_test();
 
-    sheep_test()
+    println!("enter some text");
+    let input = rpassword::read_password().unwrap();
+    println!("input: {input}");
 }

@@ -1,11 +1,11 @@
 #[derive(Debug, PartialEq)]
 pub struct CloneOptions {
-    repo_url: String,
-    path: String
+    pub repo_url: String,
+    pub path: String
 }
 
 impl CloneOptions {
-    fn new(repo_url: &str, path: &str) -> CloneOptions {
+    pub fn new(repo_url: &str, path: &str) -> CloneOptions {
         CloneOptions {
             repo_url: repo_url.to_string(),
             path: shellexpand::tilde(&path).to_string()
