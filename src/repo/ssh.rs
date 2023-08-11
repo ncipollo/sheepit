@@ -1,5 +1,5 @@
 /// Returns the standard path to the user's ssh key.
-fn default_ssh_key_path() -> String {
+pub fn default_ssh_key_path() -> String {
     shellexpand::tilde("~/.ssh/id_rsa").to_string()
 }
 
