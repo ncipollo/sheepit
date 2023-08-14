@@ -2,7 +2,10 @@ use std::path::Path;
 use git2;
 use crate::repo::ssh::default_ssh_key_path;
 use super::options::CloneOptions;
+#[cfg(test)]
+use mockall::automock;
 
+#[cfg_attr(test, automock)]
 pub trait RepoCloner {
     fn clone(&self, options: CloneOptions) -> Result<git2::Repository, git2::Error>;
 }
