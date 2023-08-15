@@ -21,8 +21,9 @@ pub fn sheep_test() {
     write_test_file();
 
     let committer = GitCommitter::new();
+    let thing = "test.txt";
     committer.commit(&repo,
-                     vec![Path::new("test.txt")],
+                     vec!["test.txt"],
                      "test commit!");
 }
 
