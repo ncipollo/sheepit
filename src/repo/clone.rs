@@ -1,5 +1,6 @@
 use std::path::Path;
 use git2;
+use git2::{Error, Repository};
 use crate::repo::ssh::default_ssh_key_path;
 use super::options::CloneOptions;
 #[cfg(test)]
@@ -7,13 +8,13 @@ use mockall::automock;
 
 #[cfg_attr(test, automock)]
 pub trait RepoCloner {
-    fn clone(&self, options: CloneOptions) -> Result<git2::Repository, git2::Error>;
+    fn clone(&self, options: CloneOptions) -> Result<Repository, Error>;
 }
 
 pub struct GitCloner {}
 
 impl RepoCloner for GitCloner {
-    fn clone(&self, clone_options: CloneOptions) -> Result<git2::Repository, git2::Error> {
+    fn clone(&self, clone_options: CloneOptions) -> Result<Repository, Error> {
         let mut callbacks = git2::RemoteCallbacks::new();
         GitCloner::add_credentials_to_callbacks(&mut callbacks);
         // Prepare fetch options.
@@ -42,7 +43,7 @@ impl GitCloner {
         });
     }
 
-    fn create_ssh_key(username_from_url: &str) -> Result<git2::Cred, git2::Error> {
+    fn create_ssh_key(username_from_url: &str) -> Result<git2::Cred, Error> {
         git2::Cred::ssh_key(
             username_from_url,
             None,

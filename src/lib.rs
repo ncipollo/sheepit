@@ -5,18 +5,29 @@ use std::string::ToString;
 use uuid::Uuid;
 use crate::repo::clone::{GitCloner, RepoCloner};
 use crate::repo::commit::{GitCommitter, RepoCommitter};
+use crate::repo::open::{GitOpener, RepoOpener};
 use crate::repo::options::CloneOptions;
 
 mod repo;
 
 pub fn sheep_test() {
+    let opener = GitOpener::new();
     let cloner = GitCloner::new();
+    let test_repo_path = shellexpand::tilde("~/Desktop/test-sheep").to_string();
     let options = CloneOptions::new(
         "git@github.com:ncipollo/test-sheep.git",
-        "~/Desktop/test-sheep",
+        &test_repo_path,
     );
-    let repo = cloner.clone(options)
-        .expect("shouldn't fail!");
+
+
+
+    let repo = if Path::new(&test_repo_path).exists() {
+        opener.open(test_repo_path)
+            .expect("git repo open failed")
+    } else {
+        cloner.clone(options)
+            .expect("clone failed")
+    };
 
     write_test_file();
 

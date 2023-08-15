@@ -6,7 +6,7 @@ use mockall::automock;
 
 #[cfg_attr(test, automock)]
 pub trait RepoCommitter {
-    fn commit<'a, P: AsRef<Path> + 'static>(&self, repository: &Repository, paths: Vec<P>, message: &str) -> Result<Oid, Error>;
+    fn commit<P: AsRef<Path> + 'static>(&self, repository: &Repository, paths: Vec<P>, message: &str) -> Result<Oid, Error>;
 }
 
 pub struct GitCommitter {
