@@ -1,16 +1,18 @@
-use std::fs::{File, OpenOptions};
+use std::fs::{OpenOptions};
 use std::io::Write;
 use std::path::{Path, PathBuf};
 use std::string::ToString;
+use git2::Error;
 use uuid::Uuid;
 use crate::repo::clone::{GitCloner, RepoCloner};
 use crate::repo::commit::{GitCommitter, RepoCommitter};
 use crate::repo::open::{GitOpener, RepoOpener};
 use crate::repo::options::CloneOptions;
+use crate::repo::tag::{GitTagger, RepoTagger};
 
 mod repo;
 
-pub fn sheep_test() {
+pub fn sheep_test() -> Result<(), Error> {
     let opener = GitOpener::new();
     let cloner = GitCloner::new();
     let test_repo_path = shellexpand::tilde("~/Desktop/test-sheep").to_string();
@@ -18,7 +20,6 @@ pub fn sheep_test() {
         "git@github.com:ncipollo/test-sheep.git",
         &test_repo_path,
     );
-
 
 
     let repo = if Path::new(&test_repo_path).exists() {
@@ -29,17 +30,25 @@ pub fn sheep_test() {
             .expect("clone failed")
     };
 
+    let tagger = GitTagger::new();
+    let tags = tagger.get_tags(&repo)?;
+    for tag in tags {
+        println!("Tag: {tag}")
+    }
+
     write_test_file();
 
     let committer = GitCommitter::new();
-    let thing = "test.txt";
     committer.commit(&repo,
                      vec!["test.txt"],
-                     "test commit!");
+                     "test commit!")
+        .expect("failed to commit");
+
+    Ok(())
 }
 
 fn test_file_path() -> PathBuf {
-    return PathBuf::from(shellexpand::tilde("~/Desktop/test-sheep/test.txt").to_string())
+    return PathBuf::from(shellexpand::tilde("~/Desktop/test-sheep/test.txt").to_string());
 }
 
 fn write_test_file() {

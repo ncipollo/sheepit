@@ -2,7 +2,7 @@ use std::path::Path;
 use git2::{Error, Repository};
 
 #[cfg(test)]
-use mockall::automock;
+use mockall::{automock, concretize};
 
 #[cfg_attr(test, automock)]
 pub trait RepoOpener {
@@ -11,13 +11,15 @@ pub trait RepoOpener {
     /// Note: The static lifetime for P is currently needed because of automock
     /// See https://github.com/asomers/mockall/issues/217
     /// I think we can remove once concretize is widely available
-    fn open<P: AsRef<Path> + 'static>(&self, path: P) -> Result<Repository, Error>;
+
+    #[cfg_attr(test, concretize)]
+    fn open<P: AsRef<Path>>(&self, path: P) -> Result<Repository, Error>;
 }
 
 pub struct GitOpener;
 
 impl RepoOpener for GitOpener {
-    fn open<P: AsRef<Path> + 'static>(&self, path: P) -> Result<Repository, Error> {
+    fn open<P: AsRef<Path>>(&self, path: P) -> Result<Repository, Error> {
         Repository::open(path)
     }
 }

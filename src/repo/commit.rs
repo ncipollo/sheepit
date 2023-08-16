@@ -2,11 +2,12 @@ use std::path::Path;
 use git2::{Commit, Config, Error, ObjectType, Oid, Repository, Tree};
 use git2_ext::ops::{Sign, UserSign};
 #[cfg(test)]
-use mockall::automock;
+use mockall::{automock, concretize};
 
 #[cfg_attr(test, automock)]
 pub trait RepoCommitter {
-    fn commit<P: AsRef<Path> + 'static>(&self, repository: &Repository, paths: Vec<P>, message: &str) -> Result<Oid, Error>;
+    #[cfg_attr(test, concretize)]
+    fn commit(&self, repository: &Repository, paths: Vec<&str>, message: &str) -> Result<Oid, Error>;
 }
 
 pub struct GitCommitter {
@@ -14,7 +15,9 @@ pub struct GitCommitter {
 }
 
 impl RepoCommitter for GitCommitter {
-    fn commit<P: AsRef<Path> + 'static>(&self, repository: &Repository, paths: Vec<P>, message: &str) -> Result<Oid, Error> {
+    fn commit(&self, repository: &Repository,
+              paths: Vec<&str>,
+              message: &str) -> Result<Oid, Error> {
         // Get git config and configuration
         let git_config = Config::open_default()?;
         let signature = repository.signature()?;

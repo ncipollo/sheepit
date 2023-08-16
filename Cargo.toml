@@ -19,4 +19,4 @@ tempfile = "3"
 uuid = { version = "1.4.1", features = ["v4"] }
 
 [dev-dependencies]
-mockall = "0.11.4"
+mockall = { git = "https://github.com/asomers/mockall" }
