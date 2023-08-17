@@ -11,6 +11,8 @@ use crate::repo::options::CloneOptions;
 use crate::repo::tag::{GitTagger, RepoTagger};
 
 mod repo;
+mod token;
+mod version;
 
 pub fn sheep_test() -> Result<(), Error> {
     let opener = GitOpener::new();

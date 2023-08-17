@@ -1,4 +1,4 @@
-use git2::{Error, Repository, Tag};
+use git2::{Error, Repository};
 use git2::string_array::StringArray;
 
 pub trait RepoTagger {
