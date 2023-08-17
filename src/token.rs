@@ -73,4 +73,44 @@ mod test {
         let result = TokenTrimmer::new("$token", "$token");
         assert_eq!(None, result)
     }
+
+    #[test]
+    fn trim_text_trims_suffix_and_prefix() {
+        let token_trimmer = TokenTrimmer::new("prefix_$token_suffix", "$token")
+            .expect("trimmer should exist");
+        let trimmed_text = token_trimmer.trim_text("prefix_1.0.0_suffix");
+        assert_eq!("1.0.0", trimmed_text)
+    }
+
+    #[test]
+    fn trim_text_trims_prefix() {
+        let token_trimmer = TokenTrimmer::new("prefix_$token", "$token")
+            .expect("trimmer should exist");
+        let trimmed_text = token_trimmer.trim_text("prefix_1.0.0_suffix");
+        assert_eq!("1.0.0_suffix", trimmed_text)
+    }
+
+    #[test]
+    fn trim_text_trims_prefix_no_suffix() {
+        let token_trimmer = TokenTrimmer::new("prefix_$token", "$token")
+            .expect("trimmer should exist");
+        let trimmed_text = token_trimmer.trim_text("prefix_1.0.0");
+        assert_eq!("1.0.0", trimmed_text)
+    }
+
+    #[test]
+    fn trim_text_trims_suffix() {
+        let token_trimmer = TokenTrimmer::new("$token_suffix", "$token")
+            .expect("trimmer should exist");
+        let trimmed_text = token_trimmer.trim_text("prefix_1.0.0_suffix");
+        assert_eq!("prefix_1.0.0", trimmed_text)
+    }
+
+    #[test]
+    fn trim_text_trims_no_prefix() {
+        let token_trimmer = TokenTrimmer::new("$token_suffix", "$token")
+            .expect("trimmer should exist");
+        let trimmed_text = token_trimmer.trim_text("1.0.0_suffix");
+        assert_eq!("1.0.0", trimmed_text)
+    }
 }
