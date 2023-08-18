@@ -80,7 +80,7 @@ impl GitCommitter {
     }
 }
 
-fn find_last_commit(repo: &Repository) -> Result<Commit, Error> {
+pub fn find_last_commit(repo: &Repository) -> Result<Commit, Error> {
     let obj = repo.head()?.resolve()?.peel(ObjectType::Commit)?;
     obj.into_commit().map_err(|_| Error::from_str("Couldn't find commit"))
 }
