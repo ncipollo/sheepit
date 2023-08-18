@@ -1,13 +1,13 @@
 use git2::{Error, Repository};
 use git2::string_array::StringArray;
 
-pub trait RepoTagger {
+pub trait RepoTags {
     fn get_tags(&self, repository: &Repository) -> Result<Vec<String>, Error>;
 }
 
-pub struct GitTagger;
+pub struct GitTags;
 
-impl RepoTagger for GitTagger {
+impl RepoTags for GitTags {
     fn get_tags(&self, repository: &Repository) -> Result<Vec<String>, Error> {
         repository
             .tag_names(None)
@@ -17,9 +17,9 @@ impl RepoTagger for GitTagger {
     }
 }
 
-impl GitTagger {
-    pub fn new() -> GitTagger {
-        GitTagger {}
+impl GitTags {
+    pub fn new() -> GitTags {
+        GitTags {}
     }
 
     fn map_tag_names_to_vec(&self, tag_names: &StringArray) -> Vec<String> {

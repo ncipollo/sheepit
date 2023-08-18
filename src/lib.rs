@@ -5,10 +5,10 @@ use std::string::ToString;
 use git2::Error;
 use uuid::Uuid;
 use crate::repo::clone::{GitCloner, RepoCloner};
-use crate::repo::commit::{GitCommitter, RepoCommitter};
+use crate::repo::commit::{GitCommits, RepoCommits};
 use crate::repo::open::{GitOpener, RepoOpener};
 use crate::repo::options::CloneOptions;
-use crate::repo::tag::{GitTagger, RepoTagger};
+use crate::repo::tag::{GitTags, RepoTags};
 
 mod repo;
 mod token;
@@ -32,7 +32,7 @@ pub fn sheep_test() -> Result<(), Error> {
             .expect("clone failed")
     };
 
-    let tagger = GitTagger::new();
+    let tagger = GitTags::new();
     let tags = tagger.get_tags(&repo)?;
     for tag in tags {
         println!("Tag: {tag}")
@@ -40,7 +40,7 @@ pub fn sheep_test() -> Result<(), Error> {
 
     write_test_file();
 
-    let committer = GitCommitter::new();
+    let committer = GitCommits::new();
     committer.commit(&repo,
                      vec!["test.txt"],
                      "test commit!")

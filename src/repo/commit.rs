@@ -5,16 +5,16 @@ use git2_ext::ops::{Sign, UserSign};
 use mockall::{automock, concretize};
 
 #[cfg_attr(test, automock)]
-pub trait RepoCommitter {
+pub trait RepoCommits {
     #[cfg_attr(test, concretize)]
     fn commit(&self, repository: &Repository, paths: Vec<&str>, message: &str) -> Result<Oid, Error>;
 }
 
-pub struct GitCommitter {
+pub struct GitCommits {
     default_branch: String,
 }
 
-impl RepoCommitter for GitCommitter {
+impl RepoCommits for GitCommits {
     fn commit(&self, repository: &Repository,
               paths: Vec<&str>,
               message: &str) -> Result<Oid, Error> {
@@ -44,13 +44,13 @@ impl RepoCommitter for GitCommitter {
     }
 }
 
-impl GitCommitter {
-    pub fn with_default_branch(default_branch: &str) -> GitCommitter {
-        GitCommitter { default_branch: String::from(default_branch) }
+impl GitCommits {
+    pub fn with_default_branch(default_branch: &str) -> GitCommits {
+        GitCommits { default_branch: String::from(default_branch) }
     }
 
-    pub fn new() -> GitCommitter {
-        GitCommitter { default_branch: String::from("head") }
+    pub fn new() -> GitCommits {
+        GitCommits { default_branch: String::from("head") }
     }
 
     fn add_paths<'a, P: AsRef<Path>>(&'a self,
@@ -87,17 +87,17 @@ pub fn find_last_commit(repo: &Repository) -> Result<Commit, Error> {
 
 #[cfg(test)]
 mod test {
-    use crate::repo::commit::GitCommitter;
+    use crate::repo::commit::GitCommits;
 
     #[test]
     fn git_committer_new() {
-        let committer = GitCommitter::new();
+        let committer = GitCommits::new();
         assert_eq!("head", committer.default_branch)
     }
 
     #[test]
     fn git_committer_with_default_branch() {
-        let committer = GitCommitter::with_default_branch("develop");
+        let committer = GitCommits::with_default_branch("develop");
         assert_eq!("develop", committer.default_branch)
     }
 }
