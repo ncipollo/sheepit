@@ -14,34 +14,9 @@ pub struct GitCommits {
     default_branch: String,
 }
 
-impl RepoCommits for GitCommits {
-    fn commit(&self, repository: &Repository,
-              paths: Vec<&str>,
-              message: &str) -> Result<Oid, Error> {
-        // Get git config and configuration
-        let git_config = Config::open_default()?;
-        let signature = repository.signature()?;
-        // Get signing options
-        let user_sign = UserSign::from_config(repository, &git_config).ok();
-        let signing = user_sign.as_ref().map(|sign| sign as &dyn Sign);
-        // Add paths to index and turn it into a git tree.
-        let tree = self.add_paths(repository, paths)?;
-        // Get the latest commit
-        let parent_commit = find_last_commit(&repository)?;
-        // Create the optionally signed commit.
-        git2_ext::ops::commit(
-            repository,
-            &signature,
-            &signature,
-            message,
-            &tree,
-            &[&parent_commit],
-            signing,
-        ).and_then(|commit_id| {
-            // Update the repository's head so it points to this new commit.
-            self.update_head(repository, commit_id, message)
-        })
-    }
+pub fn find_last_commit(repo: &Repository) -> Result<Commit, Error> {
+    let obj = repo.head()?.resolve()?.peel(ObjectType::Commit)?;
+    obj.into_commit().map_err(|_| Error::from_str("Couldn't find commit"))
 }
 
 impl GitCommits {
@@ -80,9 +55,34 @@ impl GitCommits {
     }
 }
 
-pub fn find_last_commit(repo: &Repository) -> Result<Commit, Error> {
-    let obj = repo.head()?.resolve()?.peel(ObjectType::Commit)?;
-    obj.into_commit().map_err(|_| Error::from_str("Couldn't find commit"))
+impl RepoCommits for GitCommits {
+    fn commit(&self, repository: &Repository,
+              paths: Vec<&str>,
+              message: &str) -> Result<Oid, Error> {
+        // Get git config and configuration
+        let git_config = Config::open_default()?;
+        let signature = repository.signature()?;
+        // Get signing options
+        let user_sign = UserSign::from_config(repository, &git_config).ok();
+        let signing = user_sign.as_ref().map(|sign| sign as &dyn Sign);
+        // Add paths to index and turn it into a git tree.
+        let tree = self.add_paths(repository, paths)?;
+        // Get the latest commit
+        let parent_commit = find_last_commit(&repository)?;
+        // Create the optionally signed commit.
+        git2_ext::ops::commit(
+            repository,
+            &signature,
+            &signature,
+            message,
+            &tree,
+            &[&parent_commit],
+            signing,
+        ).and_then(|commit_id| {
+            // Update the repository's head so it points to this new commit.
+            self.update_head(repository, commit_id, message)
+        })
+    }
 }
 
 #[cfg(test)]

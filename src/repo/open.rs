@@ -18,14 +18,14 @@ pub trait RepoOpener {
 
 pub struct GitOpener;
 
-impl RepoOpener for GitOpener {
-    fn open<P: AsRef<Path>>(&self, path: P) -> Result<Repository, Error> {
-        Repository::open(path)
-    }
-}
-
 impl GitOpener {
     pub fn new() -> GitOpener {
         GitOpener {}
+    }
+}
+
+impl RepoOpener for GitOpener {
+    fn open<P: AsRef<Path>>(&self, path: P) -> Result<Repository, Error> {
+        Repository::open(path)
     }
 }

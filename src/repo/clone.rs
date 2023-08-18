@@ -13,25 +13,6 @@ pub trait RepoCloner {
 
 pub struct GitCloner {}
 
-impl RepoCloner for GitCloner {
-    fn clone(&self, clone_options: CloneOptions) -> Result<Repository, Error> {
-        let mut callbacks = git2::RemoteCallbacks::new();
-        GitCloner::add_credentials_to_callbacks(&mut callbacks);
-        // Prepare fetch options.
-        let mut fetch_options = git2::FetchOptions::new();
-        fetch_options.remote_callbacks(callbacks);
-        // Prepare builder.
-        let mut builder = git2::build::RepoBuilder::new();
-        builder.fetch_options(fetch_options);
-
-        // Clone the project.
-        builder.clone(
-            &clone_options.repo_url,
-            Path::new(&clone_options.path),
-        )
-    }
-}
-
 impl GitCloner {
     pub fn new() -> GitCloner {
         return GitCloner {};
@@ -49,6 +30,25 @@ impl GitCloner {
             None,
             Path::new(&default_ssh_key_path()),
             None,
+        )
+    }
+}
+
+impl RepoCloner for GitCloner {
+    fn clone(&self, clone_options: CloneOptions) -> Result<Repository, Error> {
+        let mut callbacks = git2::RemoteCallbacks::new();
+        GitCloner::add_credentials_to_callbacks(&mut callbacks);
+        // Prepare fetch options.
+        let mut fetch_options = git2::FetchOptions::new();
+        fetch_options.remote_callbacks(callbacks);
+        // Prepare builder.
+        let mut builder = git2::build::RepoBuilder::new();
+        builder.fetch_options(fetch_options);
+
+        // Clone the project.
+        builder.clone(
+            &clone_options.repo_url,
+            Path::new(&clone_options.path),
         )
     }
 }

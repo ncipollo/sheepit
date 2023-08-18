@@ -7,16 +7,6 @@ pub trait RepoTags {
 
 pub struct GitTags;
 
-impl RepoTags for GitTags {
-    fn get_tags(&self, repository: &Repository) -> Result<Vec<String>, Error> {
-        repository
-            .tag_names(None)
-            .map(|tag_names| {
-                self.map_tag_names_to_vec(&tag_names)
-            })
-    }
-}
-
 impl GitTags {
     pub fn new() -> GitTags {
         GitTags {}
@@ -26,5 +16,16 @@ impl GitTags {
         tag_names.iter().filter_map(|name| { name })
             .map(|name| String::from(name))
             .collect()
+    }
+}
+
+
+impl RepoTags for GitTags {
+    fn get_tags(&self, repository: &Repository) -> Result<Vec<String>, Error> {
+        repository
+            .tag_names(None)
+            .map(|tag_names| {
+                self.map_tag_names_to_vec(&tag_names)
+            })
     }
 }

@@ -4,6 +4,7 @@ use std::path::{Path, PathBuf};
 use std::string::ToString;
 use git2::Error;
 use uuid::Uuid;
+use crate::repo::branch::{GithubBranches, RepoBranches};
 use crate::repo::clone::{GitCloner, RepoCloner};
 use crate::repo::commit::{GitCommits, RepoCommits};
 use crate::repo::open::{GitOpener, RepoOpener};
@@ -45,6 +46,12 @@ pub fn sheep_test() -> Result<(), Error> {
                      vec!["test.txt"],
                      "test commit!")
         .expect("failed to commit");
+
+    // let branches = GithubBranches::new();
+    // let branch = branches.create_branch(&repo, "test_branch")?;
+    // let branch_name = branch.name()?.unwrap_or_default();
+    // branches.checkout_branch(&repo, branch_name)?;
+    // println!("created branch: {branch_name}");
 
     Ok(())
 }
