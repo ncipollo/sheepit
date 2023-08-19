@@ -34,6 +34,10 @@ pub fn sheep_test() -> Result<(), Error> {
     };
 
     let tagger = GitTags::new();
+
+    // tagger.create_tag(&repo, "0.0.42", "")
+    //     .expect("failed to create tag");
+
     let tags = tagger.get_tags(&repo)?;
     for tag in tags {
         println!("Tag: {tag}")
