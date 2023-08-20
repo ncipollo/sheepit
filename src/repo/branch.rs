@@ -2,6 +2,7 @@ use git2::{Error, Repository};
 use crate::repo::commit;
 #[cfg(test)]
 use mockall::{automock};
+use crate::repo::reference::branch_ref_name;
 
 #[cfg_attr(test, automock)]
 pub trait RepoBranches {
@@ -30,7 +31,7 @@ impl RepoBranches for GithubBranches {
     }
 
     fn checkout_branch(&self, repository: &Repository, branch_name: &str) -> Result<(), Error> {
-        let ref_name = format!("refs/heads/{branch_name}");
+        let ref_name = branch_ref_name(branch_name);
         repository.set_head(&ref_name)?;
         repository.checkout_head(None)
     }

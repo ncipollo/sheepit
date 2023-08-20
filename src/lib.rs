@@ -2,13 +2,15 @@ use std::fs::{OpenOptions};
 use std::io::Write;
 use std::path::{Path, PathBuf};
 use std::string::ToString;
-use git2::Error;
+use chrono::Local;
+use git2::{Error, Time};
 use uuid::Uuid;
 use crate::repo::branch::{GithubBranches, RepoBranches};
 use crate::repo::clone::{GitCloner, RepoCloner};
 use crate::repo::commit::{GitCommits, RepoCommits};
 use crate::repo::open::{GitOpener, RepoOpener};
 use crate::repo::options::CloneOptions;
+use crate::repo::remote::{GitRemotes, RepoRemotes};
 use crate::repo::tag::{GitTags, RepoTags};
 
 mod repo;
@@ -46,9 +48,11 @@ pub fn sheep_test() -> Result<(), Error> {
     write_test_file();
 
     let committer = GitCommits::new();
+    let now = Local::now();
+    let commit_message = format!("test commit - {now}");
     committer.commit(&repo,
                      vec!["test.txt"],
-                     "test commit!")
+                     &commit_message)
         .expect("failed to commit");
 
     // let branches = GithubBranches::new();
@@ -56,6 +60,9 @@ pub fn sheep_test() -> Result<(), Error> {
     // let branch_name = branch.name()?.unwrap_or_default();
     // branches.checkout_branch(&repo, branch_name)?;
     // println!("created branch: {branch_name}");
+
+    let remotes = GitRemotes::new();
+    remotes.push_branch(&repo, "main", "origin")?;
 
     Ok(())
 }

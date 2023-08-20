@@ -11,6 +11,7 @@ version = "0.0.1"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+chrono = "0.4.26"
 git2 = "0.17.2"
 git2-ext = "0.6.0"
 lenient_semver = "0.4.2"
