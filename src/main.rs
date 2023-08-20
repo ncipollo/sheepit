@@ -1,10 +1,18 @@
-use git2::Error;
-use sheepit::{sheep_test};
+use clap::{Args, Parser};
+use crate::cli::{MajorBumpArgs, MinorBumpArgs, PatchBumpArgs};
 
-fn main() -> Result<(), Error> {
-    sheep_test()
+mod cli;
 
-    // println!("enter some text");
-    // let input = rpassword::read_password().unwrap();
-    // println!("input: {input}");
+#[derive(Parser, Debug)] // requires `derive` feature
+#[command(name = "sheepit")]
+#[command(bin_name = "sheepit")]
+pub enum SheepitCLI {
+    Major(MajorBumpArgs),
+    Minor(MinorBumpArgs),
+    Patch(PatchBumpArgs),
+}
+
+fn main() {
+    let command = SheepitCLI::parse();
+    println!("command: {:?}", command)
 }
