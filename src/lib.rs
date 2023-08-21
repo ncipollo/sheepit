@@ -5,17 +5,20 @@ use std::string::ToString;
 use chrono::Local;
 use git2::{Error, Time};
 use uuid::Uuid;
-use crate::repo::branch::{GithubBranches, RepoBranches};
-use crate::repo::clone::{GitCloner, RepoCloner};
-use crate::repo::commit::{GitCommits, RepoCommits};
-use crate::repo::open::{GitOpener, RepoOpener};
+use crate::repo::branch::{GitBranches};
+use crate::repo::clone::{GitCloner};
+use crate::repo::commit::{GitCommits};
+use crate::repo::open::{GitOpener};
 use crate::repo::options::CloneOptions;
-use crate::repo::remote::{GitRemotes, RepoRemotes};
-use crate::repo::tag::{GitTags, RepoTags};
+use crate::repo::remote::{GitRemotes};
+use crate::repo::tag::{GitTags};
 
 mod repo;
 mod token;
 mod version;
+mod project;
+mod config;
+mod error;
 
 pub fn sheep_test() -> Result<(), Error> {
     let opener = GitOpener::new();
@@ -28,10 +31,10 @@ pub fn sheep_test() -> Result<(), Error> {
 
 
     let repo = if Path::new(&test_repo_path).exists() {
-        opener.open(test_repo_path)
+        opener.open(&test_repo_path)
             .expect("git repo open failed")
     } else {
-        cloner.clone(options)
+        cloner.clone("git@github.com:ncipollo/test-sheep.git", &test_repo_path)
             .expect("clone failed")
     };
 

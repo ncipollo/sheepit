@@ -5,7 +5,7 @@ pub struct CloneOptions {
 }
 
 impl CloneOptions {
-    pub fn new(repo_url: &str, path: &str) -> CloneOptions {
+    pub fn new(repo_url: &str, path: &str) -> Self {
         CloneOptions {
             repo_url: repo_url.to_string(),
             path: shellexpand::tilde(&path).to_string()

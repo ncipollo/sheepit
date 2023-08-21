@@ -1,23 +1,25 @@
 use git2::{Direction, Error, PushOptions, RemoteCallbacks, Repository};
 use crate::repo::{reference, ssh};
 
-pub trait RepoRemotes {
-    fn push_branch(&self,
-                   repository: &Repository,
-                   branch_name: &str,
-                   remote_name: &str) -> Result<(), Error>;
-
-    fn push_tag(&self,
-                repository: &Repository,
-                tag_name: &str,
-                remote_name: &str) -> Result<(), Error>;
-}
-
 pub struct GitRemotes;
 
 impl GitRemotes {
-    pub fn new() -> GitRemotes {
+    pub fn new() -> Self {
         GitRemotes {}
+    }
+
+    pub fn push_branch(&self, repository: &Repository,
+                   branch_name: &str,
+                   remote_name: &str) -> Result<(), Error> {
+        let ref_name = reference::branch_ref_name(branch_name);
+        self.push_ref(repository, &ref_name, remote_name)
+    }
+
+    pub fn push_tag(&self, repository: &Repository,
+                tag_name: &str,
+                remote_name: &str) -> Result<(), Error> {
+        let ref_name = reference::tag_ref_name(tag_name);
+        self.push_ref(repository, &ref_name, remote_name)
     }
 
     fn push_ref(&self, repository: &Repository,
@@ -40,21 +42,5 @@ impl GitRemotes {
         // Push to remote
         let ref_spec = format!("{ref_name}:{ref_name}");
         remote.push(&[ref_spec], Some(&mut push_options))
-    }
-}
-
-impl RepoRemotes for GitRemotes {
-    fn push_branch(&self, repository: &Repository,
-                   branch_name: &str,
-                   remote_name: &str) -> Result<(), Error> {
-        let ref_name = reference::branch_ref_name(branch_name);
-        self.push_ref(repository, &ref_name, remote_name)
-    }
-
-    fn push_tag(&self, repository: &Repository,
-                tag_name: &str,
-                remote_name: &str) -> Result<(), Error> {
-        let ref_name = reference::tag_ref_name(tag_name);
-        self.push_ref(repository, &ref_name, remote_name)
     }
 }

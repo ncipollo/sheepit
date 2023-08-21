@@ -19,7 +19,7 @@ impl<'a> TokenTrimmer<'a> {
         Some(split)
     }
 
-    fn trim_text<'b>(&self, text: &'b str) -> &'b str {
+    pub fn trim_text<'b>(&self, text: &'b str) -> &'b str {
         let without_prefix = text.strip_prefix(self.before_token).unwrap_or(text);
         without_prefix.strip_suffix(self.after_token).unwrap_or(without_prefix)
     }

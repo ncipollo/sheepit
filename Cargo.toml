@@ -16,6 +16,8 @@ clap = { version = "4.3.23", features = ["derive"] }
 git2 = "0.17.2"
 git2-ext = "0.6.0"
 lenient_semver = "0.4.2"
+mockall_double = "0.3.0"
+parse-git-url = "0.5.1"
 rpassword = "7.2"
 semver = "1.0.18"
 shellexpand = "3.1.0"
