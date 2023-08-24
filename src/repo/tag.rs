@@ -12,14 +12,21 @@ impl GitTags {
     pub fn create_tag(&self,
                       repository: &Repository,
                       tag_name: &str,
-                      message: &str) -> Result<Oid, Error> {
+                      message: Option<&str>) -> Result<Oid, Error> {
         let signature = repository.signature()?;
         let head_commit = commit::find_last_commit(&repository)?;
-        repository.tag(tag_name,
-                       &head_commit.into_object(),
-                       &signature,
-                       message,
-                       false)
+        match message {
+            None => {
+                repository.tag_lightweight(tag_name, &head_commit.into_object(), false)
+            }
+            Some(msg) => {
+                repository.tag(tag_name,
+                               &head_commit.into_object(),
+                               &signature,
+                               msg,
+                               false)
+            }
+        }
     }
 
     pub fn get_tags(&self, repository: &Repository) -> Result<Vec<String>, Error> {

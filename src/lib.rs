@@ -40,9 +40,6 @@ pub fn sheep_test() -> Result<(), Error> {
 
     let tagger = GitTags::new();
 
-    // tagger.create_tag(&repo, "0.0.42", "")
-    //     .expect("failed to create tag");
-
     let tags = tagger.get_tags(&repo)?;
     for tag in tags {
         println!("Tag: {tag}")
@@ -58,6 +55,9 @@ pub fn sheep_test() -> Result<(), Error> {
                      &commit_message)
         .expect("failed to commit");
 
+    tagger.create_tag(&repo, "0.0.42", None)
+        .expect("failed to create tag");
+
     // let branches = GithubBranches::new();
     // let branch = branches.create_branch(&repo, "test_branch")?;
     // let branch_name = branch.name()?.unwrap_or_default();
@@ -66,6 +66,7 @@ pub fn sheep_test() -> Result<(), Error> {
 
     let remotes = GitRemotes::new();
     remotes.push_branch(&repo, "main", "origin")?;
+    remotes.push_tag(&repo, "0.0.42", "origin")?;
 
     Ok(())
 }
