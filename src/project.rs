@@ -9,10 +9,12 @@ use crate::repo;
 use crate::repo::clone::GitCloner;
 use crate::repo::open::{GitOpener};
 use crate::repo::path;
+use crate::repo::remote::GitRemotes;
 
 struct Project {
     config: Config,
     repo: Repository,
+    is_dry_run_project: bool
 }
 
 impl Project {
@@ -22,6 +24,7 @@ impl Project {
         let project = Project {
             config,
             repo,
+            is_dry_run_project: false
         };
         Ok(project)
     }
@@ -33,12 +36,17 @@ impl Project {
         let project = Project {
             config,
             repo,
+            is_dry_run_project: false
         };
         Ok(project)
     }
 
     pub fn new_dry_run_project(path: &str) -> Result<Project, SheepError> {
-        todo!("implement dry run project constructor")
+        let remotes = GitRemotes::new();
+        let local_project = Project::new_local_project(path)?;
+        let remote_url = remotes.remote_url(&local_project.repo, "origin");
+
+        todo!("add new remote project in")
     }
 
     pub fn update(&self, operation: Operation) {

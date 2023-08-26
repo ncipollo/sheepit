@@ -1,4 +1,5 @@
 use git2::{Direction, Error, PushOptions, RemoteCallbacks, Repository};
+use crate::error::SheepError;
 use crate::repo::{reference, ssh};
 
 pub struct GitRemotes;
@@ -8,16 +9,25 @@ impl GitRemotes {
         GitRemotes {}
     }
 
-    pub fn push_branch(&self, repository: &Repository,
-                   branch_name: &str,
-                   remote_name: &str) -> Result<(), Error> {
+    pub fn remote_url(&self,
+                      repository: &Repository,
+                      remote_name: &str) -> Result<String, SheepError> {
+        let mut remote = repository.find_remote(remote_name)?;
+        let url = remote.url().ok_or(SheepError::new("no url from remote"))?;
+        Ok(url.to_string())
+    }
+
+    pub fn push_branch(&self,
+                       repository: &Repository,
+                       branch_name: &str,
+                       remote_name: &str) -> Result<(), Error> {
         let ref_name = reference::branch_ref_name(branch_name);
         self.push_ref(repository, &ref_name, remote_name)
     }
 
     pub fn push_tag(&self, repository: &Repository,
-                tag_name: &str,
-                remote_name: &str) -> Result<(), Error> {
+                    tag_name: &str,
+                    remote_name: &str) -> Result<(), Error> {
         let ref_name = reference::tag_ref_name(tag_name);
         self.push_ref(repository, &ref_name, remote_name)
     }

@@ -3,9 +3,8 @@ use std::io::Write;
 use std::path::{Path, PathBuf};
 use std::string::ToString;
 use chrono::Local;
-use git2::{Error, Time};
 use uuid::Uuid;
-use crate::repo::branch::{GitBranches};
+use crate::error::SheepError;
 use crate::repo::clone::{GitCloner};
 use crate::repo::commit::{GitCommits};
 use crate::repo::open::{GitOpener};
@@ -20,7 +19,7 @@ mod project;
 mod config;
 mod error;
 
-pub fn sheep_test() -> Result<(), Error> {
+pub fn sheep_test() -> Result<(), SheepError> {
     let opener = GitOpener::new();
     let cloner = GitCloner::new();
     let test_repo_path = shellexpand::tilde("~/Desktop/test-sheep").to_string();
@@ -65,8 +64,9 @@ pub fn sheep_test() -> Result<(), Error> {
     // println!("created branch: {branch_name}");
 
     let remotes = GitRemotes::new();
-    remotes.push_branch(&repo, "main", "origin")?;
-    remotes.push_tag(&repo, "0.0.42", "origin")?;
+    println!("Origin URL: {}", remotes.remote_url(&repo, "origin")?);
+    // remotes.push_branch(&repo, "main", "origin")?;
+    // remotes.push_tag(&repo, "0.0.42", "origin")?;
 
     Ok(())
 }

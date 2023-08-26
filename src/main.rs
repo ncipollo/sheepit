@@ -14,5 +14,5 @@ pub enum SheepitCLI {
 
 fn main() {
     let command = SheepitCLI::parse();
-    println!("command: {:?}", command)
+    println!("command: {:?}", command);
 }
