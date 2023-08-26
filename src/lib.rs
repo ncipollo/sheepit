@@ -71,13 +71,6 @@ pub fn sheep_test() -> Result<(), Error> {
     Ok(())
 }
 
-fn clone_test() {
-    let thing = "string".to_string().clone().split("t");
-    let vector: Vec<&str> = thing.collect();
-    let joined = vector.join(",");
-    println!("{}", joined)
-}
-
 fn test_file_path() -> PathBuf {
     return PathBuf::from(shellexpand::tilde("~/Desktop/test-sheep/test.txt").to_string());
 }
