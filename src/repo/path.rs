@@ -3,9 +3,13 @@ use std::path::{Path, PathBuf};
 use parse_git_url::GitUrl;
 use crate::error::SheepError;
 
-pub fn repo_path(repo_url: &str, directory: &Path) -> Result<PathBuf, SheepError> {
+pub fn repo_path<P: AsRef<Path>>(repo_url: &str, directory: P) -> Result<PathBuf, SheepError> {
     let repo_name = repo_name(repo_url)?;
-    Ok([directory.as_os_str(), OsStr::new(&repo_name)].iter().collect::<PathBuf>())
+    let path_parts = [
+        directory.as_ref().as_os_str(),
+        OsStr::new(&repo_name)
+    ];
+    Ok(path_parts.iter().collect::<PathBuf>())
 }
 
 fn repo_name(repo_url: &str) -> Result<String, SheepError> {

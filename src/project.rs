@@ -1,10 +1,14 @@
 pub mod operation;
 
+use std::path::Path;
 use git2::{Repository};
 use crate::config::Config;
 use crate::error::SheepError;
 use crate::project::operation::Operation;
+use crate::repo;
+use crate::repo::clone::GitCloner;
 use crate::repo::open::{GitOpener};
+use crate::repo::path;
 
 struct Project {
     config: Config,
@@ -23,7 +27,14 @@ impl Project {
     }
 
     pub fn new_remote_project(url: &str, directory: &str) -> Result<Project, SheepError> {
-        todo!("implement remote project constructor")
+        let repo_path = path::repo_path(url, directory)?;
+        let repo = GitCloner::new().clone(url, repo_path)?;
+        let config = Config {};
+        let project = Project {
+            config,
+            repo,
+        };
+        Ok(project)
     }
 
     pub fn new_dry_run_project(path: &str) -> Result<Project, SheepError> {
