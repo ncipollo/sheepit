@@ -14,39 +14,46 @@ use crate::repo::remote::GitRemotes;
 struct Project {
     config: Config,
     repo: Repository,
-    is_dry_run_project: bool
+    is_dry_run_project: bool,
 }
 
 impl Project {
-    pub fn new_local_project(path: &str) -> Result<Project, SheepError> {
+    pub fn new_local_project<P: AsRef<Path>>(path: P) -> Result<Project, SheepError> {
         let repo = GitOpener::new().open(path)?;
         let config = Config {};
         let project = Project {
             config,
             repo,
-            is_dry_run_project: false
+            is_dry_run_project: false,
         };
         Ok(project)
     }
 
-    pub fn new_remote_project(url: &str, directory: &str) -> Result<Project, SheepError> {
+    pub fn new_remote_project<P: AsRef<Path>>(url: &str, directory: P) -> Result<Project, SheepError> {
         let repo_path = path::repo_path(url, directory)?;
         let repo = GitCloner::new().clone(url, repo_path)?;
         let config = Config {};
         let project = Project {
             config,
             repo,
-            is_dry_run_project: false
+            is_dry_run_project: false,
         };
         Ok(project)
     }
 
-    pub fn new_dry_run_project(path: &str) -> Result<Project, SheepError> {
+    pub fn new_dry_run_project<P: AsRef<Path>>(path: P) -> Result<Project, SheepError> {
         let remotes = GitRemotes::new();
         let local_project = Project::new_local_project(path)?;
-        let remote_url = remotes.remote_url(&local_project.repo, "origin");
+        let remote_url = remotes.remote_url(&local_project.repo, "origin")?;
+        let directory = dryrun::directory()?;
 
-        todo!("add new remote project in")
+        let remote_project = Project::new_remote_project(&remote_url, directory)?;
+        let dry_run_project = Project {
+            config: local_project.config,
+            is_dry_run_project: true,
+            repo: remote_project.repo
+        };
+        Ok(dry_run_project)
     }
 
     pub fn update(&self, operation: Operation) -> Result<ProjectUpdateInfo, SheepError> {
@@ -71,12 +78,12 @@ impl Project {
 }
 
 pub struct ProjectUpdateInfo {
-    pub repo_path: PathBuf
+    pub repo_path: PathBuf,
 }
 
 impl ProjectUpdateInfo {
     fn new(repo_path: &Path) -> ProjectUpdateInfo {
-        ProjectUpdateInfo{
+        ProjectUpdateInfo {
             repo_path: repo_path.to_path_buf()
         }
     }
