@@ -1,11 +1,11 @@
+mod dryrun;
 pub mod operation;
 
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use git2::{Repository};
 use crate::config::Config;
 use crate::error::SheepError;
 use crate::project::operation::Operation;
-use crate::repo;
 use crate::repo::clone::GitCloner;
 use crate::repo::open::{GitOpener};
 use crate::repo::path;
@@ -49,7 +49,7 @@ impl Project {
         todo!("add new remote project in")
     }
 
-    pub fn update(&self, operation: Operation) {
+    pub fn update(&self, operation: Operation) -> Result<ProjectUpdateInfo, SheepError> {
         // First get the version update information based upon operations type
 
         // Next create project strings object based upon configuration & version update
@@ -63,5 +63,21 @@ impl Project {
         // Push if enabled in configuration
 
         // Process subprojects if there are any
+
+        // Return project info
+        let repo_path = self.repo.path();
+        Ok(ProjectUpdateInfo::new(repo_path))
+    }
+}
+
+pub struct ProjectUpdateInfo {
+    pub repo_path: PathBuf
+}
+
+impl ProjectUpdateInfo {
+    fn new(repo_path: &Path) -> ProjectUpdateInfo {
+        ProjectUpdateInfo{
+            repo_path: repo_path.to_path_buf()
+        }
     }
 }

@@ -1,3 +1,5 @@
+use std::io;
+
 #[derive(Debug, PartialEq)]
 pub struct SheepError {
     message: String
@@ -15,6 +17,14 @@ impl From<git2::Error> for SheepError {
     fn from(value: git2::Error) -> Self {
         Self {
             message: format!("git error: {value}")
+        }
+    }
+}
+
+impl From<io::Error> for SheepError {
+    fn from(value: io::Error) -> Self {
+        Self {
+            message: format!("io error: {value}")
         }
     }
 }
