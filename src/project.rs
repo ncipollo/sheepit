@@ -6,7 +6,7 @@ mod project_version;
 use std::path::{Path, PathBuf};
 use git2::{Repository};
 use mockall_double::double;
-use crate::config::Config;
+use crate::config::{Config, RepoConfig};
 use crate::error::SheepError;
 use crate::project::operation::Operation;
 use crate::repo::clone::GitCloner;
@@ -17,6 +17,9 @@ use crate::repo::remote::GitRemotes;
 #[double]
 use crate::project::project_version::ProjectVersion;
 use crate::project::strings::ProjectStrings;
+use crate::repo::branch::GitBranches;
+use crate::repo::commit::GitCommits;
+use crate::repo::tag::GitTags;
 
 pub struct Project {
     config: Config,
@@ -64,22 +67,54 @@ impl Project {
     }
 
     pub fn update(&self, operation: Operation) -> Result<ProjectUpdateInfo, SheepError> {
+        let repo_config = &self.config.repository;
         let project_version = ProjectVersion::new(&self);
         let version_update = operation.version_update(&project_version);
         let project_strings = ProjectStrings::new(&self.config, &version_update);
-        // Create branch if enabled in configuration
 
-        // Create commit if enabled in configuration
-
-        // Create tag if enabled in configuration
-
-        // Push if enabled in configuration
-
+        Self::update_repo(&self.repo, repo_config, &project_strings)?;
         // Process subprojects if there are any
 
         // Return project info
         let repo_path = self.repo.path();
         Ok(ProjectUpdateInfo::new(repo_path))
+    }
+
+    fn update_repo(
+        repo: &Repository,
+        repo_config: &RepoConfig,
+        project_strings: &ProjectStrings) -> Result<(), SheepError> {
+        // Create branch if enabled in configuration
+        if repo_config.enable_branch {
+            let branches = GitBranches::new();
+            branches.create_branch(repo, &project_strings.branch_name)?;
+            branches.checkout_branch(repo, &project_strings.branch_name)?;
+        }
+        // Create commit if enabled in configuration
+        if repo_config.enable_commit {
+            let commits = GitCommits::new();
+            commits.commit(repo, vec![], &project_strings.commit_message)?;
+        }
+        // Create tag if enabled in configuration
+        if repo_config.enable_tag {
+            let tags = GitTags::new();
+            tags.create_tag(repo, &project_strings.tag_name, None)?;
+        }
+        // Push if enabled in configuration
+        if repo_config.enable_push {
+            let remotes = GitRemotes::new();
+            if repo_config.enable_branch {
+                remotes.push_branch(repo,
+                                    &project_strings.branch_name,
+                                    &project_strings.remote_name)?;
+            }
+            if repo_config.enable_tag {
+                remotes.push_tag(repo,
+                                 &project_strings.tag_name,
+                                 &project_strings.remote_name)?;
+            }
+        }
+        Ok(())
     }
 }
 
