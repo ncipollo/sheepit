@@ -1,4 +1,5 @@
 mod dryrun;
+mod strings;
 pub mod operation;
 mod project_version;
 
@@ -15,6 +16,7 @@ use crate::repo::remote::GitRemotes;
 
 #[double]
 use crate::project::project_version::ProjectVersion;
+use crate::project::strings::ProjectStrings;
 
 pub struct Project {
     config: Config,
@@ -64,8 +66,7 @@ impl Project {
     pub fn update(&self, operation: Operation) -> Result<ProjectUpdateInfo, SheepError> {
         let project_version = ProjectVersion::new(&self);
         let version_update = operation.version_update(&project_version);
-        // Next create project strings object based upon configuration & version update
-
+        let project_strings = ProjectStrings::new(&self.config, &version_update);
         // Create branch if enabled in configuration
 
         // Create commit if enabled in configuration

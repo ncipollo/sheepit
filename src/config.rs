@@ -5,16 +5,20 @@ pub struct Config {
 
 #[derive(Debug, PartialEq)]
 pub struct RepoConfig {
+    pub branch_pattern: String,
+    pub commit_message: String,
     pub enable_branch: bool,
     pub enable_commit: bool,
-    pub enable_tag: bool,
     pub enable_push: bool,
+    pub enable_tag: bool,
     pub tag_pattern: String
 }
 
 impl Default for RepoConfig {
     fn default() -> Self {
         RepoConfig {
+            branch_pattern: String::from("release/{version}"),
+            commit_message: String::from("preparing release {version}"),
             enable_branch: true,
             enable_commit: true,
             enable_tag: true,
@@ -32,6 +36,8 @@ mod test {
     fn default_config() {
         let expected = Config {
             repository: RepoConfig {
+                branch_pattern: String::from("release/{version}"),
+                commit_message: String::from("preparing release {version}"),
                 enable_branch: true,
                 enable_commit: true,
                 enable_tag: true,
