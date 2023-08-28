@@ -1,6 +1,6 @@
 use semver::{BuildMetadata, Prerelease, Version};
 
-pub fn major_version(version: Version) -> Version {
+pub fn major_version(version: &Version) -> Version {
     Version {
         major: version.major + 1,
         minor: 0,
@@ -10,7 +10,7 @@ pub fn major_version(version: Version) -> Version {
     }
 }
 
-pub fn minor_version(version: Version) -> Version {
+pub fn minor_version(version: &Version) -> Version {
     Version {
         major: version.major,
         minor: version.minor + 1,
@@ -20,7 +20,7 @@ pub fn minor_version(version: Version) -> Version {
     }
 }
 
-pub fn patch_version(version: Version) -> Version {
+pub fn patch_version(version: &Version) -> Version {
     Version {
         major: version.major,
         minor: version.minor,
@@ -47,7 +47,7 @@ mod test {
 
     #[test]
     fn test_bump_major_version() {
-        let version = major_version(test_version());
+        let version = major_version(&test_version());
         let expected = Version {
             major: 2,
             minor: 0,
@@ -60,7 +60,7 @@ mod test {
 
     #[test]
     fn test_bump_minor_version() {
-        let version = minor_version(test_version());
+        let version = minor_version(&test_version());
         let expected = Version {
             major: 1,
             minor: 3,
@@ -73,7 +73,7 @@ mod test {
 
     #[test]
     fn test_bump_patch_version() {
-        let version = patch_version(test_version());
+        let version = patch_version(&test_version());
         let expected = Version {
             major: 1,
             minor: 2,

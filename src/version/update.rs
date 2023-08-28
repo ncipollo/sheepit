@@ -1,6 +1,7 @@
 use semver::Version;
 
+#[derive(Clone, Debug, PartialEq)]
 pub struct VersionUpdate {
-    current_version: Version,
-    next_version: Version
+    pub current_version: Version,
+    pub next_version: Version
 }

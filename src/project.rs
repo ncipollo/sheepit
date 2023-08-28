@@ -1,8 +1,10 @@
 mod dryrun;
 pub mod operation;
+mod project_version;
 
 use std::path::{Path, PathBuf};
 use git2::{Repository};
+use mockall_double::double;
 use crate::config::Config;
 use crate::error::SheepError;
 use crate::project::operation::Operation;
@@ -11,7 +13,10 @@ use crate::repo::open::{GitOpener};
 use crate::repo::path;
 use crate::repo::remote::GitRemotes;
 
-struct Project {
+#[double]
+use crate::project::project_version::ProjectVersion;
+
+pub struct Project {
     config: Config,
     repo: Repository,
     is_dry_run_project: bool,
@@ -51,12 +56,15 @@ impl Project {
         let dry_run_project = Project {
             config: local_project.config,
             is_dry_run_project: true,
-            repo: remote_project.repo
+            repo: remote_project.repo,
         };
         Ok(dry_run_project)
     }
 
     pub fn update(&self, operation: Operation) -> Result<ProjectUpdateInfo, SheepError> {
+        let project_version = ProjectVersion::new(&self);
+        let version_update = operation.version_update(&project_version);
+
         // First get the version update information based upon operations type
 
         // Next create project strings object based upon configuration & version update
