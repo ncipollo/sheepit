@@ -25,7 +25,7 @@ pub struct Project {
 impl Project {
     pub fn new_local_project<P: AsRef<Path>>(path: P) -> Result<Project, SheepError> {
         let repo = GitOpener::new().open(path)?;
-        let config = Config {};
+        let config = Config::default();
         let project = Project {
             config,
             repo,
@@ -37,7 +37,7 @@ impl Project {
     pub fn new_remote_project<P: AsRef<Path>>(url: &str, directory: P) -> Result<Project, SheepError> {
         let repo_path = path::repo_path(url, directory)?;
         let repo = GitCloner::new().clone(url, repo_path)?;
-        let config = Config {};
+        let config = Config::default();
         let project = Project {
             config,
             repo,
@@ -64,9 +64,6 @@ impl Project {
     pub fn update(&self, operation: Operation) -> Result<ProjectUpdateInfo, SheepError> {
         let project_version = ProjectVersion::new(&self);
         let version_update = operation.version_update(&project_version);
-
-        // First get the version update information based upon operations type
-
         // Next create project strings object based upon configuration & version update
 
         // Create branch if enabled in configuration
