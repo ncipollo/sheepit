@@ -1,16 +1,10 @@
-use std::fs::{OpenOptions};
 use std::io::Write;
 use std::path::{Path, PathBuf};
 use std::string::ToString;
-use chrono::Local;
-use uuid::Uuid;
-use crate::error::SheepError;
-use crate::repo::clone::{GitCloner};
-use crate::repo::commit::{GitCommits};
-use crate::repo::open::{GitOpener};
-use crate::repo::options::CloneOptions;
-use crate::repo::remote::{GitRemotes};
-use crate::repo::tag::{GitTags};
+use crate::project::{Project};
+
+pub use crate::project::operation::{BumpMode, Operation};
+pub use crate::error::SheepError;
 
 mod repo;
 mod token;
@@ -19,71 +13,40 @@ mod project;
 mod config;
 mod error;
 
-pub fn sheep_test() -> Result<(), SheepError> {
-    let opener = GitOpener::new();
-    let cloner = GitCloner::new();
-    let test_repo_path = shellexpand::tilde("~/Desktop/test-sheep").to_string();
-    let options = CloneOptions::new(
-        "git@github.com:ncipollo/test-sheep.git",
-        &test_repo_path,
-    );
-
-
-    let repo = if Path::new(&test_repo_path).exists() {
-        opener.open(&test_repo_path)
-            .expect("git repo open failed")
+pub fn project_update<P: AsRef<Path>>(operation: Operation,
+                                      path: P,
+                                      dry_run: bool) -> Result<(), SheepError> {
+    let expanded_path = expand_path(path);
+    let project = if dry_run {
+        Project::new_dry_run_project(&expanded_path)?
     } else {
-        cloner.clone("git@github.com:ncipollo/test-sheep.git", &test_repo_path)
-            .expect("clone failed")
+        Project::new_local_project(&expanded_path)?
     };
 
-    let tagger = GitTags::new();
+    project.update(operation)
+}
 
-    let tags = tagger.get_tags(&repo)?;
-    for tag in tags {
-        println!("Tag: {tag}")
+fn expand_path<P: AsRef<Path>>(path: P) -> PathBuf {
+    let lossy_path = path.as_ref().to_string_lossy();
+    let path_string = lossy_path.as_ref();
+    let expanded = shellexpand::tilde(path_string);
+    PathBuf::from(expanded.as_ref())
+}
+
+#[cfg(test)]
+mod test {
+    use std::env;
+    use std::path::Path;
+    use crate::expand_path;
+
+    #[test]
+    fn expanded_path() {
+        let home = env::var("HOME").unwrap();
+        let expected = format!("{home}/foo");
+
+        let path = Path::new("~/foo");
+        let expanded_path = expand_path(path);
+
+        assert_eq!(expected, expanded_path.to_string_lossy().to_string())
     }
-
-    write_test_file();
-
-    let committer = GitCommits::new();
-    let now = Local::now();
-    let commit_message = format!("test commit - {now}");
-    committer.commit(&repo,
-                     vec!["test.txt"],
-                     &commit_message)
-        .expect("failed to commit");
-
-    tagger.create_tag(&repo, "0.0.42", None)
-        .expect("failed to create tag");
-
-    // let branches = GithubBranches::new();
-    // let branch = branches.create_branch(&repo, "test_branch")?;
-    // let branch_name = branch.name()?.unwrap_or_default();
-    // branches.checkout_branch(&repo, branch_name)?;
-    // println!("created branch: {branch_name}");
-
-    let remotes = GitRemotes::new();
-    println!("Origin URL: {}", remotes.remote_url(&repo, "origin")?);
-    // remotes.push_branch(&repo, "main", "origin")?;
-    // remotes.push_tag(&repo, "0.0.42", "origin")?;
-
-    Ok(())
-}
-
-fn test_file_path() -> PathBuf {
-    return PathBuf::from(shellexpand::tilde("~/Desktop/test-sheep/test.txt").to_string());
-}
-
-fn write_test_file() {
-    let id = Uuid::new_v4();
-
-    let mut file = OpenOptions::new()
-        .create(true)
-        .truncate(true)
-        .write(true)
-        .open(test_file_path())
-        .expect("couldn't open test file");
-    write!(file, "uuid: {}", id.to_string()).expect("failed to write to test file");
-    println!("uuid: {}", id.to_string())
 }

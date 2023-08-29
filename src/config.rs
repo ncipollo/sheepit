@@ -19,8 +19,8 @@ impl Default for RepoConfig {
         RepoConfig {
             branch_pattern: String::from("release/{version}"),
             commit_message: String::from("preparing release {version}"),
-            enable_branch: true,
-            enable_commit: true,
+            enable_branch: false,
+            enable_commit: false,
             enable_tag: true,
             enable_push: true,
             tag_pattern: String::from("{version}")
@@ -38,8 +38,8 @@ mod test {
             repository: RepoConfig {
                 branch_pattern: String::from("release/{version}"),
                 commit_message: String::from("preparing release {version}"),
-                enable_branch: true,
-                enable_commit: true,
+                enable_branch: false,
+                enable_commit: false,
                 enable_tag: true,
                 enable_push: true,
                 tag_pattern: String::from("{version}")

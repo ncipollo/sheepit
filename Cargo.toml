@@ -12,7 +12,7 @@ version = "0.0.1"
 
 [dependencies]
 chrono = "0.4.26"
-clap = { version = "4.3.23", features = ["derive"] }
+clap = { version = "4.3.23", features = ["derive", "string"] }
 git2 = "0.17.2"
 git2-ext = "0.6.0"
 lenient_semver = "0.4.2"
@@ -20,7 +20,7 @@ mockall_double = "0.3.0"
 parse-git-url = "0.5.1"
 rpassword = "7.2"
 semver = "1.0.18"
-shellexpand = "3.1.0"
+shellexpand = { version = "3.1.0", features = ["full"] }
 tempfile = "3"
 uuid = { version = "1.4.1", features = ["v4"] }
 

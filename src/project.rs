@@ -66,42 +66,56 @@ impl Project {
         Ok(dry_run_project)
     }
 
-    pub fn update(&self, operation: Operation) -> Result<ProjectUpdateInfo, SheepError> {
+    pub fn update(&self, operation: Operation) -> Result<(), SheepError> {
         let repo_config = &self.config.repository;
         let project_version = ProjectVersion::new(&self);
         let version_update = operation.version_update(&project_version);
         let project_strings = ProjectStrings::new(&self.config, &version_update);
 
-        Self::update_repo(&self.repo, repo_config, &project_strings)?;
+        self.update_repo(repo_config, &project_strings)?;
+
         // Process subprojects if there are any
 
-        // Return project info
-        let repo_path = self.repo.path();
-        Ok(ProjectUpdateInfo::new(repo_path))
+        // Print out completion message, including dry run path if needed
+        if self.is_dry_run_project {
+            let mut repo_path_buf = self.repo.path().to_path_buf();
+            repo_path_buf.pop(); // remove the .git path component
+            let repo_path = repo_path_buf.to_string_lossy().to_string();
+            println!("🐑 dry run results may be found here: {repo_path}");
+        } else {
+            println!("🐑 project has been sheep'd");
+        }
+        Ok(())
     }
 
     fn update_repo(
-        repo: &Repository,
+        &self,
         repo_config: &RepoConfig,
         project_strings: &ProjectStrings) -> Result<(), SheepError> {
+        let repo = &self.repo;
         // Create branch if enabled in configuration
         if repo_config.enable_branch {
+            println!("🌲 creating branch {}", &project_strings.branch_name);
             let branches = GitBranches::new();
             branches.create_branch(repo, &project_strings.branch_name)?;
             branches.checkout_branch(repo, &project_strings.branch_name)?;
         }
         // Create commit if enabled in configuration
         if repo_config.enable_commit {
+            println!("✍️  committing changes");
             let commits = GitCommits::new();
             commits.commit(repo, vec![], &project_strings.commit_message)?;
         }
         // Create tag if enabled in configuration
         if repo_config.enable_tag {
+            println!("️🏷  creating tag {}", &project_strings.tag_name);
             let tags = GitTags::new();
             tags.create_tag(repo, &project_strings.tag_name, None)?;
         }
         // Push if enabled in configuration
-        if repo_config.enable_push {
+        if repo_config.enable_push && !self.is_dry_run_project {
+            println!("🚀 pushing to remote {}", &project_strings.remote_name);
+
             let remotes = GitRemotes::new();
             if repo_config.enable_branch {
                 remotes.push_branch(repo,
@@ -115,17 +129,5 @@ impl Project {
             }
         }
         Ok(())
-    }
-}
-
-pub struct ProjectUpdateInfo {
-    pub repo_path: PathBuf,
-}
-
-impl ProjectUpdateInfo {
-    fn new(repo_path: &Path) -> ProjectUpdateInfo {
-        ProjectUpdateInfo {
-            repo_path: repo_path.to_path_buf()
-        }
     }
 }

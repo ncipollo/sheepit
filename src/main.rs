@@ -1,23 +1,32 @@
 use clap::{Args, Parser};
-use tempfile::{Builder, TempDir};
+use sheepit::{BumpMode, Operation, project_update, SheepError};
 use crate::cli::{MajorBumpArgs, MinorBumpArgs, PatchBumpArgs};
 
 mod cli;
 
-#[derive(Parser, Debug)] // requires `derive` feature
-#[command(name = "sheepit")]
-#[command(bin_name = "sheepit")]
+#[derive(Parser, Debug)]
+#[command(name = "sheepit", version)]
 pub enum SheepitCLI {
     Major(MajorBumpArgs),
     Minor(MinorBumpArgs),
     Patch(PatchBumpArgs),
 }
 
-fn main() {
-    let temp = Builder::new().prefix("sheepit").tempdir()
-        .expect("couldn't make temp");
-    let temp_path = temp.into_path();
-    println!("Temp path: {:?}", temp_path.to_str().unwrap());
+fn main() -> Result<(), SheepError> {
     let command = SheepitCLI::parse();
-    println!("command: {:?}", command);
+    match command {
+        SheepitCLI::Major(args) => {
+            let operation = Operation::BumpVersion(BumpMode::Major);
+            project_update(operation, args.repo_path, args.dry_run)?
+        }
+        SheepitCLI::Minor(args) => {
+            let operation = Operation::BumpVersion(BumpMode::Minor);
+            project_update(operation, args.repo_path, args.dry_run)?
+        }
+        SheepitCLI::Patch(args) => {
+            let operation = Operation::BumpVersion(BumpMode::Patch);
+            project_update(operation, args.repo_path, args.dry_run)?
+        }
+    };
+    Ok(())
 }
