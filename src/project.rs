@@ -3,7 +3,7 @@ mod strings;
 pub mod operation;
 mod project_version;
 
-use std::path::{Path, PathBuf};
+use std::path::Path;
 use git2::{Repository};
 use mockall_double::double;
 use crate::config::{Config, RepoConfig};
