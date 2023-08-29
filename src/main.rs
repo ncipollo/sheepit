@@ -1,4 +1,4 @@
-use clap::{Args, Parser};
+use clap::{Args, CommandFactory, Parser};
 use sheepit::{BumpMode, Operation, project_update, SheepError};
 use crate::cli::{MajorBumpArgs, MinorBumpArgs, PatchBumpArgs};
 
@@ -10,6 +10,11 @@ pub enum SheepitCLI {
     Major(MajorBumpArgs),
     Minor(MinorBumpArgs),
     Patch(PatchBumpArgs),
+    #[command(about = "prints out completions for the provided shell")]
+    Completions {
+        #[arg(value_enum)]
+        shell: clap_complete_command::Shell,
+    },
 }
 
 fn main() -> Result<(), SheepError> {
@@ -26,6 +31,9 @@ fn main() -> Result<(), SheepError> {
         SheepitCLI::Patch(args) => {
             let operation = Operation::BumpVersion(BumpMode::Patch);
             project_update(operation, args.repo_path, args.dry_run)?
+        }
+        SheepitCLI::Completions { shell } => {
+            shell.generate(&mut SheepitCLI::command(), &mut std::io::stdout());
         }
     };
     Ok(())
