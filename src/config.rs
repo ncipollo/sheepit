@@ -7,6 +7,7 @@ pub struct Config {
 pub struct RepoConfig {
     pub branch_pattern: String,
     pub commit_message: String,
+    pub default_branch: String,
     pub enable_branch: bool,
     pub enable_commit: bool,
     pub enable_push: bool,
@@ -19,6 +20,7 @@ impl Default for RepoConfig {
         RepoConfig {
             branch_pattern: String::from("release/{version}"),
             commit_message: String::from("preparing release {version}"),
+            default_branch: String::from("main"),
             enable_branch: false,
             enable_commit: false,
             enable_tag: true,
@@ -38,6 +40,7 @@ mod test {
             repository: RepoConfig {
                 branch_pattern: String::from("release/{version}"),
                 commit_message: String::from("preparing release {version}"),
+                default_branch: String::from("main"),
                 enable_branch: false,
                 enable_commit: false,
                 enable_tag: true,

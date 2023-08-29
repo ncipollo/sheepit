@@ -121,6 +121,10 @@ impl Project {
                 remotes.push_branch(repo,
                                     &project_strings.branch_name,
                                     &project_strings.remote_name)?;
+            } else if repo_config.enable_commit {
+                remotes.push_branch(repo,
+                                   &repo_config.default_branch,
+                                   &project_strings.remote_name)?;
             }
             if repo_config.enable_tag {
                 remotes.push_tag(repo,
