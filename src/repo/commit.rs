@@ -16,10 +16,6 @@ impl GitCommits {
         GitCommits { default_branch: String::from(default_branch) }
     }
 
-    pub fn new() -> Self {
-        GitCommits { default_branch: String::from("head") }
-    }
-
     pub fn commit(&self, repository: &Repository,
               paths: Vec<&str>,
               message: &str) -> Result<Oid, Error> {
@@ -78,12 +74,6 @@ impl GitCommits {
 #[cfg(test)]
 mod test {
     use crate::repo::commit::GitCommits;
-
-    #[test]
-    fn git_committer_new() {
-        let committer = GitCommits::new();
-        assert_eq!("head", committer.default_branch)
-    }
 
     #[test]
     fn git_committer_with_default_branch() {

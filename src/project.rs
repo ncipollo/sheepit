@@ -103,7 +103,7 @@ impl Project {
         // Create commit if enabled in configuration
         if repo_config.enable_commit {
             println!("✍️  committing changes");
-            let commits = GitCommits::new();
+            let commits = GitCommits::with_default_branch(&repo_config.default_branch);
             commits.commit(repo, vec![], &project_strings.commit_message)?;
         }
         // Create tag if enabled in configuration

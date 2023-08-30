@@ -9,6 +9,7 @@ pub struct ProjectVersion<'a> {
     project: &'a Project,
 }
 
+#[cfg_attr(test, allow(dead_code))]
 impl<'a> ProjectVersion<'a> {
     pub fn new(project: &'a Project) -> Self {
         Self { project }

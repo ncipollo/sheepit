@@ -4,6 +4,7 @@ use crate::repo::commit;
 
 pub struct GitTags;
 
+#[cfg_attr(test, allow(dead_code))]
 impl GitTags {
     pub fn new() -> Self {
         GitTags {}
