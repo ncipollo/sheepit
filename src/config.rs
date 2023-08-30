@@ -1,3 +1,6 @@
+mod finder;
+mod opener;
+
 #[derive(Debug, Default, PartialEq)]
 pub struct Config {
     pub repository: RepoConfig

@@ -10,6 +10,7 @@ mod version;
 mod project;
 mod config;
 mod error;
+mod file;
 
 pub fn project_update<P: AsRef<Path>>(operation: Operation,
                                       path: P,
