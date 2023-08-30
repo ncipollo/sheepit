@@ -59,6 +59,19 @@ mod test {
     }
 
     #[test]
+    fn test_bump_major_version_with_prefix() {
+        let version = major_version(&lenient_semver::parse("v1.0.0").unwrap());
+        let expected = Version {
+            major: 2,
+            minor: 0,
+            patch: 0,
+            pre: Default::default(),
+            build: Default::default(),
+        };
+        assert_eq!(expected, version)
+    }
+
+    #[test]
     fn test_bump_minor_version() {
         let version = minor_version(&test_version());
         let expected = Version {

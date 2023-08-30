@@ -92,6 +92,28 @@ mod test {
     }
 
     #[test]
+    fn from_tag_list_with_trimmer_trims_v() {
+        let tags = vec![
+            "v0.0.1",
+            "v10.0.0",
+            "v2.0.0"
+        ];
+        let string_tags = tags_to_string(&tags);
+        let token_trimmer = TokenTrimmer::new("v$version", "$version");
+        let version_list = VersionList::from_tag_list(&string_tags, token_trimmer);
+        let expected_tags = vec![
+            "0.0.1",
+            "2.0.0",
+            "10.0.0",
+        ];
+        let expected_versions = expected_tags.iter()
+            .filter_map(|tag| lenient_semver::parse(tag).ok())
+            .collect::<Vec<_>>();
+        let expected = VersionList(expected_versions);
+        assert_eq!(expected, version_list)
+    }
+
+    #[test]
     fn latest_version_empty_version_list() {
         let version_list = VersionList::from_tag_list(&vec![], None);
         assert_eq!(None, version_list.latest_version())
@@ -107,6 +129,20 @@ mod test {
         let string_tags = tags_to_string(&tags);
         let version_list = VersionList::from_tag_list(&string_tags, None);
         let expected_version = lenient_semver::parse("10.0.0")
+            .expect("expected version should parse");
+        assert_eq!(Some(expected_version), version_list.latest_version())
+    }
+
+    #[test]
+    fn latest_version_with_versions_with_v() {
+        let tags = vec![
+            "v10.0.0",
+            "v2.0.0",
+            "v0.0.1",
+        ];
+        let string_tags = tags_to_string(&tags);
+        let version_list = VersionList::from_tag_list(&string_tags, None);
+        let expected_version = lenient_semver::parse("v10.0.0")
             .expect("expected version should parse");
         assert_eq!(Some(expected_version), version_list.latest_version())
     }

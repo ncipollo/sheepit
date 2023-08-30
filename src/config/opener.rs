@@ -5,9 +5,17 @@ use crate::config::Config;
 use crate::config::finder::find_config;
 #[double]
 use crate::file::FileChecker;
+use crate::SheepError;
 
-pub fn open_config() -> Option<Config> {
-    Some(Config::default())
+pub fn open_config<P: AsRef<Path>>(repo_path: P) -> Result<Option<Config>, SheepError> {
+    let config_text = read_config(repo_path);
+    match config_text {
+        None => Ok(None),
+        Some(text) => {
+            let config: Config = toml::from_str(&text)?;
+            Ok(Some(config))
+        }
+    }
 }
 
 fn read_config<P: AsRef<Path>>(repo_path: P) -> Option<String> {
