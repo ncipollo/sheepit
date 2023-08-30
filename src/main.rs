@@ -1,4 +1,4 @@
-use clap::{Args, CommandFactory, Parser};
+use clap::{CommandFactory, Parser};
 use sheepit::{BumpMode, Operation, project_update, SheepError};
 use crate::cli::{MajorBumpArgs, MinorBumpArgs, PatchBumpArgs};
 

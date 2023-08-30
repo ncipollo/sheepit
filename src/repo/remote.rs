@@ -12,7 +12,7 @@ impl GitRemotes {
     pub fn remote_url(&self,
                       repository: &Repository,
                       remote_name: &str) -> Result<String, SheepError> {
-        let mut remote = repository.find_remote(remote_name)?;
+        let remote = repository.find_remote(remote_name)?;
         let url = remote.url().ok_or(SheepError::new("no url from remote"))?;
         Ok(url.to_string())
     }

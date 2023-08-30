@@ -1,6 +1,4 @@
-use std::io::Write;
 use std::path::{Path, PathBuf};
-use std::string::ToString;
 use crate::project::{Project};
 
 pub use crate::project::operation::{BumpMode, Operation};
