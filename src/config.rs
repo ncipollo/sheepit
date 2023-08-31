@@ -1,4 +1,6 @@
+use std::path::Path;
 use serde::{Deserialize, Serialize};
+use crate::SheepError;
 
 mod finder;
 mod opener;
@@ -7,6 +9,12 @@ mod opener;
 pub struct Config {
     #[serde(default)]
     pub repository: RepoConfig,
+}
+
+impl Config {
+    pub fn open<P: AsRef<Path>>(repo_path: P) -> Result<Config, SheepError> {
+        opener::open_config(repo_path)
+    }
 }
 
 #[derive(Debug, Deserialize, PartialEq, Serialize)]

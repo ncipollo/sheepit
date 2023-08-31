@@ -7,13 +7,13 @@ use crate::config::finder::find_config;
 use crate::file::FileChecker;
 use crate::SheepError;
 
-pub fn open_config<P: AsRef<Path>>(repo_path: P) -> Result<Option<Config>, SheepError> {
+pub fn open_config<P: AsRef<Path>>(repo_path: P) -> Result<Config, SheepError> {
     let config_text = read_config(repo_path);
     match config_text {
-        None => Ok(None),
+        None => Ok(Config::default()),
         Some(text) => {
             let config: Config = toml::from_str(&text)?;
-            Ok(Some(config))
+            Ok(config)
         }
     }
 }

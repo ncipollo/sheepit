@@ -29,8 +29,8 @@ pub struct Project {
 
 impl Project {
     pub fn new_local_project<P: AsRef<Path>>(path: P) -> Result<Project, SheepError> {
-        let repo = GitOpener::new().open(path)?;
-        let config = Config::default();
+        let repo = GitOpener::new().open(&path)?;
+        let config = Config::open(&path)?;
         let project = Project {
             config,
             repo,
@@ -41,8 +41,8 @@ impl Project {
 
     pub fn new_remote_project<P: AsRef<Path>>(url: &str, directory: P) -> Result<Project, SheepError> {
         let repo_path = path::repo_path(url, directory)?;
-        let repo = GitCloner::new().clone(url, repo_path)?;
-        let config = Config::default();
+        let repo = GitCloner::new().clone(url, &repo_path)?;
+        let config = Config::open(&repo_path)?;
         let project = Project {
             config,
             repo,
