@@ -9,6 +9,8 @@ mod opener;
 pub struct Config {
     #[serde(default)]
     pub repository: RepoConfig,
+    #[serde(default)]
+    pub transforms: Vec<TransformConfig>
 }
 
 impl Config {
@@ -72,9 +74,17 @@ impl Default for RepoConfig {
     }
 }
 
+#[derive(Debug, Default, Deserialize, PartialEq, Serialize)]
+pub struct TransformConfig {
+    pub path: String,
+    #[serde(default)]
+    pub find: Option<String>,
+    pub replace: String,
+}
+
 #[cfg(test)]
 mod test {
-    use crate::config::{Config, RepoConfig};
+    use crate::config::{Config, RepoConfig, TransformConfig};
 
     #[test]
     fn default_config() {
@@ -88,7 +98,8 @@ mod test {
                 enable_tag: true,
                 enable_push: true,
                 tag_pattern: String::from("{version}"),
-            }
+            },
+            transforms: vec![]
         };
         assert_eq!(expected, Config::default())
     }
@@ -122,6 +133,15 @@ mod test {
         enable_tag = false
         enable_push = false
         tag_pattern = 'tag'
+
+        [[transforms]]
+        path = 'path_1'
+        find = 'find_1'
+        replace = 'replace_1'
+
+        [[transforms]]
+        path = 'path_2'
+        replace = 'replace_2'
         ").expect("failed to parse config");
 
         let expected = Config {
@@ -134,7 +154,19 @@ mod test {
                 enable_push: false,
                 enable_tag: false,
                 tag_pattern: "tag".to_string(),
-            }
+            },
+            transforms: vec![
+                TransformConfig {
+                    path: "path_1".to_string(),
+                    find: Some("find_1".to_string()),
+                    replace: "replace_1".to_string()
+                },
+                TransformConfig {
+                    path: "path_2".to_string(),
+                    find: None,
+                    replace: "replace_2".to_string()
+                }
+            ]
         };
         assert_eq!(expected, config)
     }
