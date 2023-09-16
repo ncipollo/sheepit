@@ -1,3 +1,5 @@
+pub const VERSION: &str = "{version}";
+
 #[derive(Debug, PartialEq)]
 pub struct TokenTrimmer<'a> {
     pub before_token: &'a str,

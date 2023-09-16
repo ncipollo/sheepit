@@ -11,6 +11,7 @@ mod project;
 mod config;
 mod error;
 mod file;
+mod transform;
 
 pub fn project_update<P: AsRef<Path>>(operation: Operation,
                                       path: P,

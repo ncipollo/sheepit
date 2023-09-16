@@ -1,4 +1,5 @@
 use crate::config::Config;
+use crate::token;
 use crate::version::update::VersionUpdate;
 
 #[derive(Debug, PartialEq)]
@@ -13,7 +14,7 @@ impl ProjectStrings {
     pub fn new(config: &Config, version_update: &VersionUpdate) -> ProjectStrings {
         let repo_config = &config.repository;
         let next_version = &version_update.next_version.to_string();
-        let token = "{version}";
+        let token = token::VERSION;
         ProjectStrings {
             branch_name: repo_config.branch_pattern.replace(token, next_version),
             commit_message: repo_config.commit_message.replace(token, next_version),

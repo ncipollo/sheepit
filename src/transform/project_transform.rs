@@ -1,0 +1,124 @@
+use crate::config::TransformConfig;
+#[double]
+use crate::file::{FileReader, FileWriter};
+use crate::transform::file_transform::FileTransformer;
+use crate::version::update::VersionUpdate;
+use crate::SheepError;
+use mockall_double::double;
+
+struct ProjectTransformer {
+    file_reader: FileReader,
+    file_writer: FileWriter,
+}
+
+impl Default for ProjectTransformer {
+    fn default() -> Self {
+        ProjectTransformer {
+            file_reader: FileReader::new(),
+            file_writer: FileWriter::new(),
+        }
+    }
+}
+
+impl ProjectTransformer {
+    fn new(file_reader: FileReader, file_writer: FileWriter) -> Self {
+        ProjectTransformer {
+            file_reader,
+            file_writer,
+        }
+    }
+
+    fn transform(
+        &self,
+        configs: Vec<TransformConfig>,
+        version_update: &VersionUpdate,
+    ) -> Result<(), SheepError> {
+        configs
+            .iter()
+            .map(|c| FileTransformer::new(c, &self.file_reader, &self.file_writer))
+            .try_for_each(|t| t.transform(version_update))
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use crate::config::TransformConfig;
+    use crate::file::{MockFileReader, MockFileWriter};
+    use crate::transform::project_transform::ProjectTransformer;
+    use crate::version::update::VersionUpdate;
+    use crate::SheepError;
+    use semver::Version;
+
+    const PATH_1: &str = "path_1";
+    const PATH_2: &str = "path_2";
+
+    #[test]
+    fn transform_file_transform_error() {
+        let project_transformer =
+            ProjectTransformer::new(failed_reader(), MockFileWriter::default());
+        project_transformer
+            .transform(configs(), &version_update())
+            .expect_err("should have failed");
+    }
+
+    #[test]
+    fn transform_applies_all_transforms() {
+        let reader = mock_reader("first_1.0.0".to_string(), "second_1.0.0".to_string());
+        let writer = mock_writer("first_2.0.0".to_string(), "second_2.0.0".to_string());
+        let project_transformer = ProjectTransformer::new(reader, writer);
+        project_transformer
+            .transform(configs(), &version_update())
+            .expect("transform fails")
+    }
+
+    fn failed_reader() -> MockFileReader {
+        let mut mock = MockFileReader::default();
+        mock.expect_read_to_string()
+            .return_once(|_| Err(SheepError::new("transform fail")));
+        mock
+    }
+
+    fn mock_reader(first_text_read: String, second_text_read: String) -> MockFileReader {
+        let mut mock = MockFileReader::default();
+        mock.expect_read_to_string()
+            .withf_st(|p| p.as_ref().to_str().unwrap() == PATH_1)
+            .return_once(|_| Ok(first_text_read));
+        mock.expect_read_to_string()
+            .withf_st(|p| p.as_ref().to_str().unwrap() == PATH_2)
+            .return_once(|_| Ok(second_text_read));
+        mock
+    }
+
+    fn mock_writer(first_expected: String, second_expected: String) -> MockFileWriter {
+        let mut mock = MockFileWriter::default();
+        mock.expect_write_string_to_file()
+            .withf_st(move |p, t| p.as_ref().to_str().unwrap() == PATH_1 && t == first_expected)
+            .return_once(|_, _| Ok(()));
+        mock.expect_write_string_to_file()
+            .withf_st(move |p, t| p.as_ref().to_str().unwrap() == PATH_2 && t == second_expected)
+            .return_once(|_, _| Ok(()));
+        mock
+    }
+
+    fn configs() -> Vec<TransformConfig> {
+        vec![
+            TransformConfig {
+                path: "path_1".to_string(),
+                find: None,
+                replace: "first_{version}".to_string(),
+            },
+            TransformConfig {
+                path: "path_2".to_string(),
+                find: None,
+                replace: "second_{version}".to_string(),
+            },
+        ]
+    }
+
+    fn version_update() -> VersionUpdate {
+        VersionUpdate {
+            current_version: Version::parse("1.0.0").expect("failed to parse version"),
+            next_version: Version::parse("2.0.0").expect("failed to parse version"),
+        }
+    }
+}
