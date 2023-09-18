@@ -28,7 +28,7 @@ impl<'a> FileTransformer<'a> {
         }
     }
 
-    pub fn transform(&self, version_update: &VersionUpdate) -> Result<(), SheepError> {
+    pub fn transform(&self, version_update: &VersionUpdate) -> Result<String, SheepError> {
         let relative_path = &self.config.path;
         let path = self.full_path(relative_path);
         let file_text = self.file_reader.read_to_string(&path)?;
@@ -38,11 +38,13 @@ impl<'a> FileTransformer<'a> {
             1,
         );
         self.file_writer.write_string_to_file(&path, &transformed)?;
-        Ok(())
+        Ok(relative_path.clone())
     }
 
     fn full_path(&self, relative_path: &str) -> PathBuf {
-        [self.project_path, &Path::new(relative_path)].iter().collect()
+        [self.project_path, &Path::new(relative_path)]
+            .iter()
+            .collect()
     }
 
     fn find_string(&self, version_update: &VersionUpdate) -> String {
@@ -71,7 +73,7 @@ mod test {
     use crate::transform::file_transform::FileTransformer;
     use crate::version::update::VersionUpdate;
     use semver::Version;
-    use std::path::{PathBuf};
+    use std::path::PathBuf;
 
     const PATH: &str = "path";
     const PROJECT_PATH: &str = "project";
@@ -88,9 +90,10 @@ mod test {
         };
         let project_path = project_path();
         let file_transformer = FileTransformer::new(&config, &reader, &writer, &project_path);
-        file_transformer
+        let path = file_transformer
             .transform(&version_update())
             .expect("transform failed");
+        assert_eq!(PATH, path)
     }
 
     #[test]
@@ -104,9 +107,10 @@ mod test {
         };
         let project_path = project_path();
         let file_transformer = FileTransformer::new(&config, &reader, &writer, &project_path);
-        file_transformer
+        let path = file_transformer
             .transform(&version_update())
             .expect("transform failed");
+        assert_eq!(PATH, path)
     }
 
     #[test]
@@ -120,9 +124,10 @@ mod test {
         };
         let project_path = project_path();
         let file_transformer = FileTransformer::new(&config, &reader, &writer, &project_path);
-        file_transformer
+        let path = file_transformer
             .transform(&version_update())
             .expect("transform failed");
+        assert_eq!(PATH, path)
     }
 
     #[test]
@@ -136,9 +141,10 @@ mod test {
         };
         let project_path = project_path();
         let file_transformer = FileTransformer::new(&config, &reader, &writer, &project_path);
-        file_transformer
+        let path = file_transformer
             .transform(&version_update())
             .expect("transform failed");
+        assert_eq!(PATH, path)
     }
 
     fn project_path() -> PathBuf {

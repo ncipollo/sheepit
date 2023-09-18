@@ -113,15 +113,15 @@ impl Project {
             branches.create_branch(repo, &project_strings.branch_name)?;
             branches.checkout_branch(repo, &project_strings.branch_name)?;
         }
-        // Create commit if enabled in configuration
-        if repo_config.enable_commit {
-            if !self.config.transforms.is_empty() {
-                println!("🤖 applying transforms");
-                self.transformer.transform(&self.config.transforms, version_update)?;
-            }
+        // Create commit if enabled in configuration and we have transforms
+        let transforms = &self.config.transforms;
+        if repo_config.enable_commit && !transforms.is_empty() {
+            println!("🤖 applying transforms");
+            let paths = self.transformer.transform(transforms, version_update)?;
+            let path_refs: Vec<&str> = paths.iter().map(|p| p.as_str()).collect();
             println!("✍️  committing changes");
             let commits = GitCommits::with_default_branch(&repo_config.default_branch);
-            commits.commit(repo, vec![], &project_strings.commit_message)?;
+            commits.commit(repo, path_refs, &project_strings.commit_message)?;
         }
         // Create tag if enabled in configuration
         if repo_config.enable_tag {

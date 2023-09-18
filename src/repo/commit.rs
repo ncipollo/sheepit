@@ -51,6 +51,10 @@ impl GitCommits {
         paths.iter().for_each(|path| {
             index.add_path(path.as_ref()).expect("failed to add path")
         });
+        // Write the index itself.
+        index.write()?;
+        // Write the tree from the index, then find it's OID. The OID can then be used to create a
+        // commit.
         let oid = index.write_tree()?;
         repository.find_tree(oid)
     }

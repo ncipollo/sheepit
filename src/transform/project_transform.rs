@@ -38,13 +38,20 @@ impl ProjectTransformer {
         &self,
         configs: &Vec<TransformConfig>,
         version_update: &VersionUpdate,
-    ) -> Result<(), SheepError> {
-        configs
+    ) -> Result<Vec<String>, SheepError> {
+        let transformers: Vec<FileTransformer> = configs
             .iter()
             .map(|c| {
                 FileTransformer::new(c, &self.file_reader, &self.file_writer, &self.project_path)
             })
-            .try_for_each(|t| t.transform(version_update))
+            .collect();
+
+        let mut paths: Vec<String> = Vec::new();
+        for transformer in transformers {
+            let path = transformer.transform(version_update)?;
+            paths.push(path)
+        }
+        Ok(paths)
     }
 }
 
@@ -82,9 +89,13 @@ mod test {
         let writer = mock_writer("first_2.0.0".to_string(), "second_2.0.0".to_string());
         let project_transformer =
             ProjectTransformer::for_tests(reader, writer, PathBuf::from(PROJECT_PATH));
-        project_transformer
+        let paths = project_transformer
             .transform(&configs(), &version_update())
-            .expect("transform fails")
+            .expect("transform fails");
+        assert_eq!(
+            paths,
+            vec![PATH_1.to_string(), PATH_2.to_string()]
+        )
     }
 
     fn failed_reader() -> MockFileReader {
@@ -108,10 +119,14 @@ mod test {
     fn mock_writer(first_expected: String, second_expected: String) -> MockFileWriter {
         let mut mock = MockFileWriter::default();
         mock.expect_write_string_to_file()
-            .withf_st(move |p, t| p.as_ref().to_str().unwrap() == FULL_PATH_1 && t == first_expected)
+            .withf_st(move |p, t| {
+                p.as_ref().to_str().unwrap() == FULL_PATH_1 && t == first_expected
+            })
             .return_once(|_, _| Ok(()));
         mock.expect_write_string_to_file()
-            .withf_st(move |p, t| p.as_ref().to_str().unwrap() == FULL_PATH_2 && t == second_expected)
+            .withf_st(move |p, t| {
+                p.as_ref().to_str().unwrap() == FULL_PATH_2 && t == second_expected
+            })
             .return_once(|_, _| Ok(()));
         mock
     }

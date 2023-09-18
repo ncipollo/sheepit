@@ -323,7 +323,7 @@ checksum = "a02e722c7e38969577e2f7a59b13fde0ee93e32b21d64bcbc3befedb9dd57a8b"
 dependencies = [
  "bstr",
  "git2",
- "itertools",
+ "itertools 0.10.5",
  "log",
  "shlex",
  "tempfile",
@@ -384,6 +384,15 @@ name = "itertools"
 version = "0.10.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b0fd2260e829bddf4cb6ea802289de2f86d6a7a690192fbe91b3f46e0f2c8473"
+dependencies = [
+ "either",
+]
+
+[[package]]
+name = "itertools"
+version = "0.11.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b1c173a5686ce8bfa551b3563d0c2170bf24ca44da99c7ca4bfdab5418c3fe57"
 dependencies = [
  "either",
 ]
@@ -624,7 +633,7 @@ dependencies = [
  "anstyle",
  "difflib",
  "float-cmp",
- "itertools",
+ "itertools 0.10.5",
  "normalize-line-endings",
  "predicates-core",
  "regex",
@@ -778,6 +787,7 @@ dependencies = [
  "clap_complete_command",
  "git2",
  "git2-ext",
+ "itertools 0.11.0",
  "lenient_semver",
  "mockall",
  "mockall_double",
