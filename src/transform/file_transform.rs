@@ -4,11 +4,13 @@ use crate::file::{FileReader, FileWriter};
 use crate::version::update::VersionUpdate;
 use crate::{token, SheepError};
 use mockall_double::double;
+use std::path::{Path, PathBuf};
 
 pub struct FileTransformer<'a> {
     config: &'a TransformConfig,
     file_reader: &'a FileReader,
     file_writer: &'a FileWriter,
+    project_path: &'a Path,
 }
 
 impl<'a> FileTransformer<'a> {
@@ -16,24 +18,31 @@ impl<'a> FileTransformer<'a> {
         config: &'a TransformConfig,
         file_reader: &'a FileReader,
         file_writer: &'a FileWriter,
+        project_path: &'a Path,
     ) -> Self {
         Self {
             config,
             file_reader,
             file_writer,
+            project_path,
         }
     }
 
     pub fn transform(&self, version_update: &VersionUpdate) -> Result<(), SheepError> {
-        let path = &self.config.path;
-        let file_text = self.file_reader.read_to_string(path)?;
+        let relative_path = &self.config.path;
+        let path = self.full_path(relative_path);
+        let file_text = self.file_reader.read_to_string(&path)?;
         let transformed = file_text.replacen(
             &self.find_string(version_update),
             &self.replace_string(version_update),
             1,
         );
-        self.file_writer.write_string_to_file(path, &transformed)?;
+        self.file_writer.write_string_to_file(&path, &transformed)?;
         Ok(())
+    }
+
+    fn full_path(&self, relative_path: &str) -> PathBuf {
+        [self.project_path, &Path::new(relative_path)].iter().collect()
     }
 
     fn find_string(&self, version_update: &VersionUpdate) -> String {
@@ -57,13 +66,16 @@ impl<'a> FileTransformer<'a> {
 
 #[cfg(test)]
 mod test {
-    const PATH: &str = "path";
-
     use crate::config::TransformConfig;
     use crate::file::{MockFileReader, MockFileWriter};
     use crate::transform::file_transform::FileTransformer;
     use crate::version::update::VersionUpdate;
     use semver::Version;
+    use std::path::{PathBuf};
+
+    const PATH: &str = "path";
+    const PROJECT_PATH: &str = "project";
+    const FULL_PATH: &str = "project/path";
 
     #[test]
     fn transform_find_and_replace_no_version() {
@@ -74,7 +86,8 @@ mod test {
             find: Some("find".to_string()),
             replace: "replace".to_string(),
         };
-        let file_transformer = FileTransformer::new(&config, &reader, &writer);
+        let project_path = project_path();
+        let file_transformer = FileTransformer::new(&config, &reader, &writer, &project_path);
         file_transformer
             .transform(&version_update())
             .expect("transform failed");
@@ -89,7 +102,8 @@ mod test {
             find: Some("find_{version}".to_string()),
             replace: "replace".to_string(),
         };
-        let file_transformer = FileTransformer::new(&config, &reader, &writer);
+        let project_path = project_path();
+        let file_transformer = FileTransformer::new(&config, &reader, &writer, &project_path);
         file_transformer
             .transform(&version_update())
             .expect("transform failed");
@@ -104,7 +118,8 @@ mod test {
             find: Some("find_{version}".to_string()),
             replace: "replace__{version}".to_string(),
         };
-        let file_transformer = FileTransformer::new(&config, &reader, &writer);
+        let project_path = project_path();
+        let file_transformer = FileTransformer::new(&config, &reader, &writer, &project_path);
         file_transformer
             .transform(&version_update())
             .expect("transform failed");
@@ -119,10 +134,15 @@ mod test {
             find: None,
             replace: "version_{version}".to_string(),
         };
-        let file_transformer = FileTransformer::new(&config, &reader, &writer);
+        let project_path = project_path();
+        let file_transformer = FileTransformer::new(&config, &reader, &writer, &project_path);
         file_transformer
             .transform(&version_update())
             .expect("transform failed");
+    }
+
+    fn project_path() -> PathBuf {
+        PathBuf::from(PROJECT_PATH)
     }
 
     fn version_update() -> VersionUpdate {
@@ -136,7 +156,7 @@ mod test {
         let text_copy = text.to_string();
         let mut mock = MockFileReader::default();
         mock.expect_read_to_string()
-            .withf_st(|p| p.as_ref().to_str().unwrap() == PATH)
+            .withf_st(|p| p.as_ref().to_str().unwrap() == FULL_PATH)
             .return_once(|_| Ok(text_copy));
         mock
     }
@@ -146,7 +166,7 @@ mod test {
         let mut mock = MockFileWriter::default();
         mock.expect_write_string_to_file()
             .withf_st(move |p, t| {
-                p.as_ref().to_str().unwrap() == PATH && t == expected_copy.clone()
+                p.as_ref().to_str().unwrap() == FULL_PATH && t == expected_copy.clone()
             })
             .return_once(|_, _| Ok(()));
         mock

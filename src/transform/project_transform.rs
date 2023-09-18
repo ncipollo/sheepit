@@ -5,37 +5,45 @@ use crate::transform::file_transform::FileTransformer;
 use crate::version::update::VersionUpdate;
 use crate::SheepError;
 use mockall_double::double;
+use std::path::{Path, PathBuf};
 
-struct ProjectTransformer {
+pub struct ProjectTransformer {
     file_reader: FileReader,
     file_writer: FileWriter,
+    project_path: PathBuf,
 }
-
-impl Default for ProjectTransformer {
-    fn default() -> Self {
-        ProjectTransformer {
-            file_reader: FileReader::new(),
-            file_writer: FileWriter::new(),
-        }
-    }
-}
-
 impl ProjectTransformer {
-    fn new(file_reader: FileReader, file_writer: FileWriter) -> Self {
+    #[cfg(test)]
+    pub fn for_tests(
+        file_reader: FileReader,
+        file_writer: FileWriter,
+        project_path: PathBuf,
+    ) -> Self {
         ProjectTransformer {
             file_reader,
             file_writer,
+            project_path,
         }
     }
 
-    fn transform(
+    pub fn new<P: AsRef<Path>>(project_path: P) -> Self {
+        ProjectTransformer {
+            file_reader: FileReader::new(),
+            file_writer: FileWriter::new(),
+            project_path: project_path.as_ref().to_path_buf(),
+        }
+    }
+
+    pub fn transform(
         &self,
-        configs: Vec<TransformConfig>,
+        configs: &Vec<TransformConfig>,
         version_update: &VersionUpdate,
     ) -> Result<(), SheepError> {
         configs
             .iter()
-            .map(|c| FileTransformer::new(c, &self.file_reader, &self.file_writer))
+            .map(|c| {
+                FileTransformer::new(c, &self.file_reader, &self.file_writer, &self.project_path)
+            })
             .try_for_each(|t| t.transform(version_update))
     }
 }
@@ -48,16 +56,23 @@ mod test {
     use crate::version::update::VersionUpdate;
     use crate::SheepError;
     use semver::Version;
+    use std::path::PathBuf;
 
     const PATH_1: &str = "path_1";
     const PATH_2: &str = "path_2";
+    const PROJECT_PATH: &str = "project";
+    const FULL_PATH_1: &str = "project/path_1";
+    const FULL_PATH_2: &str = "project/path_2";
 
     #[test]
     fn transform_file_transform_error() {
-        let project_transformer =
-            ProjectTransformer::new(failed_reader(), MockFileWriter::default());
+        let project_transformer = ProjectTransformer::for_tests(
+            failed_reader(),
+            MockFileWriter::default(),
+            PathBuf::from(PROJECT_PATH),
+        );
         project_transformer
-            .transform(configs(), &version_update())
+            .transform(&configs(), &version_update())
             .expect_err("should have failed");
     }
 
@@ -65,9 +80,10 @@ mod test {
     fn transform_applies_all_transforms() {
         let reader = mock_reader("first_1.0.0".to_string(), "second_1.0.0".to_string());
         let writer = mock_writer("first_2.0.0".to_string(), "second_2.0.0".to_string());
-        let project_transformer = ProjectTransformer::new(reader, writer);
+        let project_transformer =
+            ProjectTransformer::for_tests(reader, writer, PathBuf::from(PROJECT_PATH));
         project_transformer
-            .transform(configs(), &version_update())
+            .transform(&configs(), &version_update())
             .expect("transform fails")
     }
 
@@ -81,10 +97,10 @@ mod test {
     fn mock_reader(first_text_read: String, second_text_read: String) -> MockFileReader {
         let mut mock = MockFileReader::default();
         mock.expect_read_to_string()
-            .withf_st(|p| p.as_ref().to_str().unwrap() == PATH_1)
+            .withf_st(|p| p.as_ref().to_str().unwrap() == FULL_PATH_1)
             .return_once(|_| Ok(first_text_read));
         mock.expect_read_to_string()
-            .withf_st(|p| p.as_ref().to_str().unwrap() == PATH_2)
+            .withf_st(|p| p.as_ref().to_str().unwrap() == FULL_PATH_2)
             .return_once(|_| Ok(second_text_read));
         mock
     }
@@ -92,10 +108,10 @@ mod test {
     fn mock_writer(first_expected: String, second_expected: String) -> MockFileWriter {
         let mut mock = MockFileWriter::default();
         mock.expect_write_string_to_file()
-            .withf_st(move |p, t| p.as_ref().to_str().unwrap() == PATH_1 && t == first_expected)
+            .withf_st(move |p, t| p.as_ref().to_str().unwrap() == FULL_PATH_1 && t == first_expected)
             .return_once(|_, _| Ok(()));
         mock.expect_write_string_to_file()
-            .withf_st(move |p, t| p.as_ref().to_str().unwrap() == PATH_2 && t == second_expected)
+            .withf_st(move |p, t| p.as_ref().to_str().unwrap() == FULL_PATH_2 && t == second_expected)
             .return_once(|_, _| Ok(()));
         mock
     }
@@ -103,12 +119,12 @@ mod test {
     fn configs() -> Vec<TransformConfig> {
         vec![
             TransformConfig {
-                path: "path_1".to_string(),
+                path: PATH_1.to_string(),
                 find: None,
                 replace: "first_{version}".to_string(),
             },
             TransformConfig {
-                path: "path_2".to_string(),
+                path: PATH_2.to_string(),
                 find: None,
                 replace: "second_{version}".to_string(),
             },

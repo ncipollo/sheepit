@@ -1,18 +1,18 @@
 mod dryrun;
-mod strings;
 pub mod operation;
 mod project_version;
+mod strings;
 
-use std::path::Path;
-use git2::{Repository};
-use mockall_double::double;
 use crate::config::{Config, RepoConfig};
 use crate::error::SheepError;
 use crate::project::operation::Operation;
 use crate::repo::clone::GitCloner;
-use crate::repo::open::{GitOpener};
+use crate::repo::open::GitOpener;
 use crate::repo::path;
 use crate::repo::remote::GitRemotes;
+use git2::Repository;
+use mockall_double::double;
+use std::path::Path;
 
 #[double]
 use crate::project::project_version::ProjectVersion;
@@ -20,10 +20,13 @@ use crate::project::strings::ProjectStrings;
 use crate::repo::branch::GitBranches;
 use crate::repo::commit::GitCommits;
 use crate::repo::tag::GitTags;
+use crate::transform::project_transform::ProjectTransformer;
+use crate::version::update::VersionUpdate;
 
 pub struct Project {
     config: Config,
     repo: Repository,
+    transformer: ProjectTransformer,
     is_dry_run_project: bool,
 }
 
@@ -31,21 +34,28 @@ impl Project {
     pub fn new_local_project<P: AsRef<Path>>(path: P) -> Result<Project, SheepError> {
         let repo = GitOpener::new().open(&path)?;
         let config = Config::open(&path)?;
+        let transformer = ProjectTransformer::new(path);
         let project = Project {
             config,
             repo,
+            transformer,
             is_dry_run_project: false,
         };
         Ok(project)
     }
 
-    pub fn new_remote_project<P: AsRef<Path>>(url: &str, directory: P) -> Result<Project, SheepError> {
+    pub fn new_remote_project<P: AsRef<Path>>(
+        url: &str,
+        directory: P,
+    ) -> Result<Project, SheepError> {
         let repo_path = path::repo_path(url, directory)?;
         let repo = GitCloner::new().clone(url, &repo_path)?;
         let config = Config::open(&repo_path)?;
+        let transformer = ProjectTransformer::new(&repo_path);
         let project = Project {
             config,
             repo,
+            transformer,
             is_dry_run_project: false,
         };
         Ok(project)
@@ -62,6 +72,7 @@ impl Project {
             config: local_project.config,
             is_dry_run_project: true,
             repo: remote_project.repo,
+            transformer: remote_project.transformer,
         };
         Ok(dry_run_project)
     }
@@ -72,7 +83,7 @@ impl Project {
         let version_update = operation.version_update(&project_version);
         let project_strings = ProjectStrings::new(&self.config, &version_update);
 
-        self.update_repo(repo_config, &project_strings)?;
+        self.update_repo(repo_config, &project_strings, &version_update)?;
 
         // Process subprojects if there are any
 
@@ -91,7 +102,9 @@ impl Project {
     fn update_repo(
         &self,
         repo_config: &RepoConfig,
-        project_strings: &ProjectStrings) -> Result<(), SheepError> {
+        project_strings: &ProjectStrings,
+        version_update: &VersionUpdate,
+    ) -> Result<(), SheepError> {
         let repo = &self.repo;
         // Create branch if enabled in configuration
         if repo_config.enable_branch {
@@ -102,6 +115,10 @@ impl Project {
         }
         // Create commit if enabled in configuration
         if repo_config.enable_commit {
+            if !self.config.transforms.is_empty() {
+                println!("🤖 applying transforms");
+                self.transformer.transform(&self.config.transforms, version_update)?;
+            }
             println!("✍️  committing changes");
             let commits = GitCommits::with_default_branch(&repo_config.default_branch);
             commits.commit(repo, vec![], &project_strings.commit_message)?;
@@ -118,18 +135,24 @@ impl Project {
 
             let remotes = GitRemotes::new();
             if repo_config.enable_branch {
-                remotes.push_branch(repo,
-                                    &project_strings.branch_name,
-                                    &project_strings.remote_name)?;
+                remotes.push_branch(
+                    repo,
+                    &project_strings.branch_name,
+                    &project_strings.remote_name,
+                )?;
             } else if repo_config.enable_commit {
-                remotes.push_branch(repo,
-                                   &repo_config.default_branch,
-                                   &project_strings.remote_name)?;
+                remotes.push_branch(
+                    repo,
+                    &repo_config.default_branch,
+                    &project_strings.remote_name,
+                )?;
             }
             if repo_config.enable_tag {
-                remotes.push_tag(repo,
-                                 &project_strings.tag_name,
-                                 &project_strings.remote_name)?;
+                remotes.push_tag(
+                    repo,
+                    &project_strings.tag_name,
+                    &project_strings.remote_name,
+                )?;
             }
         }
         Ok(())
