@@ -5,6 +5,7 @@ use crate::transform::file_transform::FileTransformer;
 use crate::version::update::VersionUpdate;
 use crate::SheepError;
 use mockall_double::double;
+use std::collections::BTreeSet;
 use std::path::{Path, PathBuf};
 
 pub struct ProjectTransformer {
@@ -46,12 +47,12 @@ impl ProjectTransformer {
             })
             .collect();
 
-        let mut paths: Vec<String> = Vec::new();
+        let mut paths: BTreeSet<String> = BTreeSet::new();
         for transformer in transformers {
             let path = transformer.transform(version_update)?;
-            paths.push(path)
+            paths.insert(path);
         }
-        Ok(paths)
+        Ok(Vec::from_iter(paths))
     }
 }
 
@@ -92,10 +93,7 @@ mod test {
         let paths = project_transformer
             .transform(&configs(), &version_update())
             .expect("transform fails");
-        assert_eq!(
-            paths,
-            vec![PATH_1.to_string(), PATH_2.to_string()]
-        )
+        assert_eq!(paths, vec![PATH_1.to_string(), PATH_2.to_string()])
     }
 
     fn failed_reader() -> MockFileReader {
@@ -112,7 +110,7 @@ mod test {
             .return_once(|_| Ok(first_text_read));
         mock.expect_read_to_string()
             .withf_st(|p| p.as_ref().to_str().unwrap() == FULL_PATH_2)
-            .return_once(|_| Ok(second_text_read));
+            .returning(move |_| Ok(second_text_read.clone()));
         mock
     }
 
@@ -127,7 +125,7 @@ mod test {
             .withf_st(move |p, t| {
                 p.as_ref().to_str().unwrap() == FULL_PATH_2 && t == second_expected
             })
-            .return_once(|_, _| Ok(()));
+            .returning(|_, _| Ok(()));
         mock
     }
 
@@ -143,6 +141,11 @@ mod test {
                 find: None,
                 replace: "second_{version}".to_string(),
             },
+            TransformConfig {
+                path: PATH_2.to_string(),
+                find: None,
+                replace: "second_{version}".to_string(),
+            }, // Used to verify we filter duplicate output paths
         ]
     }
 
