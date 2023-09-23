@@ -10,6 +10,8 @@ pub struct Config {
     #[serde(default)]
     pub repository: RepoConfig,
     #[serde(default)]
+    pub subprojects: Vec<SubprojectConfig>,
+    #[serde(default)]
     pub transforms: Vec<TransformConfig>
 }
 
@@ -82,9 +84,14 @@ pub struct TransformConfig {
     pub replace: String,
 }
 
+#[derive(Debug, Default, Deserialize, PartialEq, Serialize)]
+pub struct SubprojectConfig {
+    pub repo_url: String,
+}
+
 #[cfg(test)]
 mod test {
-    use crate::config::{Config, RepoConfig, TransformConfig};
+    use crate::config::{Config, RepoConfig, SubprojectConfig, TransformConfig};
 
     #[test]
     fn default_config() {
@@ -99,6 +106,7 @@ mod test {
                 enable_push: true,
                 tag_pattern: String::from("{version}"),
             },
+            subprojects: vec![],
             transforms: vec![]
         };
         assert_eq!(expected, Config::default())
@@ -134,6 +142,9 @@ mod test {
         enable_push = false
         tag_pattern = 'tag'
 
+        [[subprojects]]
+        repo_url = 'https://api.example.com'
+
         [[transforms]]
         path = 'path_1'
         find = 'find_1'
@@ -155,6 +166,11 @@ mod test {
                 enable_tag: false,
                 tag_pattern: "tag".to_string(),
             },
+            subprojects: vec![
+                SubprojectConfig {
+                    repo_url: "https://api.example.com".to_string()
+                }
+            ],
             transforms: vec![
                 TransformConfig {
                     path: "path_1".to_string(),
