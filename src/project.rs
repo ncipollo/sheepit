@@ -1,7 +1,7 @@
-mod dryrun;
 pub mod operation;
 mod project_version;
 mod strings;
+mod temp;
 
 use crate::config::{Config, RepoConfig};
 use crate::error::SheepError;
@@ -47,6 +47,7 @@ impl Project {
     pub fn new_remote_project<P: AsRef<Path>>(
         url: &str,
         directory: P,
+        is_dry_run_project: bool,
     ) -> Result<Project, SheepError> {
         let repo_path = path::repo_path(url, directory)?;
         let repo = GitCloner::new().clone(url, &repo_path)?;
@@ -56,7 +57,7 @@ impl Project {
             config,
             repo,
             transformer,
-            is_dry_run_project: false,
+            is_dry_run_project,
         };
         Ok(project)
     }
@@ -65,9 +66,9 @@ impl Project {
         let remotes = GitRemotes::new();
         let local_project = Project::new_local_project(path)?;
         let remote_url = remotes.remote_url(&local_project.repo, "origin")?;
-        let directory = dryrun::directory()?;
+        let directory = temp::directory()?;
 
-        let remote_project = Project::new_remote_project(&remote_url, directory)?;
+        let remote_project = Project::new_remote_project(&remote_url, directory, false)?;
         let dry_run_project = Project {
             config: local_project.config,
             is_dry_run_project: true,
@@ -85,8 +86,6 @@ impl Project {
 
         self.update_repo(repo_config, &project_strings, &version_update)?;
 
-        // Process subprojects if there are any
-
         // Print out completion message, including dry run path if needed
         if self.is_dry_run_project {
             let mut repo_path_buf = self.repo.path().to_path_buf();
@@ -96,6 +95,10 @@ impl Project {
         } else {
             println!("🐑 project has been sheep'd");
         }
+
+        // Process subprojects if there are any
+        self.update_subprojects(&version_update)?;
+
         Ok(())
     }
 
@@ -155,6 +158,30 @@ impl Project {
                 )?;
             }
         }
+        Ok(())
+    }
+
+    fn update_subprojects(&self, version_update: &VersionUpdate) -> Result<(), SheepError> {
+        let configs = &self.config.subprojects;
+        let is_dry_run = self.is_dry_run_project;
+        if configs.is_empty() {
+            return Ok(());
+        }
+
+        let directory = temp::directory()?;
+
+        for config in configs {
+            let operation = Operation::SetVersion {
+                current_version: Some(version_update.current_version.clone()),
+                next_version: version_update.next_version.clone()
+            };
+            let url = &config.repo_url;
+            let project = Self::new_remote_project(url, &directory, is_dry_run)?;
+            println!("------------");
+            println!("🚢 sheep'n subproject {}", url);
+            project.update(operation)?;
+        }
+
         Ok(())
     }
 }

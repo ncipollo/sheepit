@@ -24,6 +24,12 @@ enable_tag = true # When true sheepit will create a tag from your latest commit.
 enable_push = true # When true sheepit will push changes to origin (unless you dry-run)
 tag_pattern = '{version}' # The naming pattern to use when creating a tag 
 
+# Each of the below subprojects will point to another git repo. Sheepit will clone this project, then
+# use it's sheepit config to apply the update. The version info will reflect the main project, meaning the
+# previous version and next version will be derived from the main project's update.
+[[subprojects]]
+repo_url = 'git@github.com:some-user/test-sub-sheep.git' # Git remote url for subproject
+
 # Each of the below transforms will find and replace a single string in the specified file. If you need to 
 # replace multiple strings, add multiple transforms.
 [[transforms]]
@@ -53,7 +59,7 @@ reasonable defaults. Defaults can be found here: [config.rs](https://github.com/
 Sheepit supports semantic version bumps. You can bump the major, minor and patch version. During a version bump, sheepit
 will do the following:
 
-- Find the lastest version by looking at your repo's tag list.
+- Find the latest version by looking at your repo's tag list.
 - Figure out the next version depending on the bump type.
 - Optionally create a release branch for you.
 - Optionally create a commit after performing any necessary transforms (coming soon!).
