@@ -27,7 +27,7 @@ fn find_best_ssh_key() -> Result<String, SheepError> {
 fn ssh_file_names(ssh_dir_path: PathBuf) -> Result<Vec<String>, SheepError> {
     let names = fs::read_dir(ssh_dir_path)?
         .map(|res| res.map(|e| e.file_name()))
-        .map({ |res| res.map_or("".to_string(), |name| name.to_string_lossy().to_string()) })
+        .map(|res| res.map_or("".to_string(), |name| name.to_string_lossy().to_string()))
         .collect::<Vec<_>>();
     Ok(names)
 }
