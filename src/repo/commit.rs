@@ -1,6 +1,5 @@
 use git2::{Commit, Config, Error, ObjectType, Oid, Repository, Tree};
 use git2_ext::ops::{Sign, UserSign};
-use std::path::Path;
 
 pub struct GitCommits {
     default_branch: String,
