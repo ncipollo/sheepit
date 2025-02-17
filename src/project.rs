@@ -20,6 +20,7 @@ use crate::project::strings::ProjectStrings;
 use crate::repo::branch::GitBranches;
 use crate::repo::commit::GitCommits;
 use crate::repo::tag::GitTags;
+use crate::script::ScriptRunner;
 use crate::transform::project_transform::ProjectTransformer;
 use crate::version::update::VersionUpdate;
 
@@ -109,6 +110,12 @@ impl Project {
         version_update: &VersionUpdate,
     ) -> Result<(), SheepError> {
         let repo = &self.repo;
+        let mut working_dir = self.repo.path().to_path_buf();
+        working_dir.pop(); // remove the .git path component
+
+        let scripts = &self.config.scripts;
+        let script_runner = ScriptRunner::new(working_dir, version_update.clone());
+
         // Create branch if enabled in configuration
         if repo_config.enable_branch {
             println!("🌲 creating branch {}", &project_strings.branch_name);
@@ -118,13 +125,16 @@ impl Project {
         }
         // Create commit if enabled in configuration and we have transforms
         let transforms = &self.config.transforms;
-        if repo_config.enable_commit && !transforms.is_empty() {
+        if repo_config.enable_commit && (!transforms.is_empty() || scripts.before_commit.is_some())
+        {
             println!("🤖 applying transforms");
-            let paths = self.transformer.transform(transforms, version_update)?;
-            let path_refs: Vec<&str> = paths.iter().map(|p| p.as_str()).collect();
+            self.transformer.transform(transforms, version_update)?;
+
+            script_runner.run(scripts.before_commit.clone(), "before_commit")?;
+
             println!("✍️  committing changes");
             let commits = GitCommits::with_default_branch(&repo_config.default_branch);
-            commits.commit(repo, path_refs, &project_strings.commit_message)?;
+            commits.commit(repo, &project_strings.commit_message)?;
         }
         // Create tag if enabled in configuration
         if repo_config.enable_tag {
@@ -173,7 +183,7 @@ impl Project {
         for config in configs {
             let operation = Operation::SetVersion {
                 current_version: Some(version_update.current_version.clone()),
-                next_version: version_update.next_version.clone()
+                next_version: version_update.next_version.clone(),
             };
             let url = &config.repo_url;
             let project = Self::new_remote_project(url, &directory, is_dry_run)?;

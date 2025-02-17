@@ -1,6 +1,6 @@
-use std::path::Path;
-use serde::{Deserialize, Serialize};
 use crate::SheepError;
+use serde::{Deserialize, Serialize};
+use std::path::Path;
 
 mod finder;
 mod opener;
@@ -10,9 +10,11 @@ pub struct Config {
     #[serde(default)]
     pub repository: RepoConfig,
     #[serde(default)]
+    pub scripts: ScriptConfig,
+    #[serde(default)]
     pub subprojects: Vec<SubprojectConfig>,
     #[serde(default)]
-    pub transforms: Vec<TransformConfig>
+    pub transforms: Vec<TransformConfig>,
 }
 
 impl Config {
@@ -89,9 +91,14 @@ pub struct SubprojectConfig {
     pub repo_url: String,
 }
 
+#[derive(Debug, Default, Deserialize, PartialEq, Serialize)]
+pub struct ScriptConfig {
+    pub before_commit: Option<String>,
+}
+
 #[cfg(test)]
 mod test {
-    use crate::config::{Config, RepoConfig, SubprojectConfig, TransformConfig};
+    use crate::config::{Config, RepoConfig, ScriptConfig, SubprojectConfig, TransformConfig};
 
     #[test]
     fn default_config() {
@@ -106,32 +113,36 @@ mod test {
                 enable_push: true,
                 tag_pattern: String::from("{version}"),
             },
+            scripts: ScriptConfig::default(),
             subprojects: vec![],
-            transforms: vec![]
+            transforms: vec![],
         };
         assert_eq!(expected, Config::default())
     }
 
     #[test]
     fn from_toml_completely_empty() {
-        let config: Config = toml::from_str("")
-            .expect("failed to parse config");
+        let config: Config = toml::from_str("").expect("failed to parse config");
         let expected = Config::default();
         assert_eq!(expected, config)
     }
 
     #[test]
     fn from_toml_empty_repo_config() {
-        let config: Config = toml::from_str(r"
+        let config: Config = toml::from_str(
+            r"
         [repository]
-        ").expect("failed to parse config");
+        ",
+        )
+        .expect("failed to parse config");
         let expected = Config::default();
         assert_eq!(expected, config)
     }
 
     #[test]
     fn from_toml_full_config() {
-        let config: Config = toml::from_str(r"
+        let config: Config = toml::from_str(
+            r"
         [repository]
         branch_pattern = 'branch'
         commit_message = 'commit'
@@ -141,6 +152,9 @@ mod test {
         enable_tag = false
         enable_push = false
         tag_pattern = 'tag'
+
+        [scripts]
+        before_commit = 'echo hello'
 
         [[subprojects]]
         repo_url = 'https://api.example.com'
@@ -153,7 +167,9 @@ mod test {
         [[transforms]]
         path = 'path_2'
         replace = 'replace_2'
-        ").expect("failed to parse config");
+        ",
+        )
+        .expect("failed to parse config");
 
         let expected = Config {
             repository: RepoConfig {
@@ -166,23 +182,24 @@ mod test {
                 enable_tag: false,
                 tag_pattern: "tag".to_string(),
             },
-            subprojects: vec![
-                SubprojectConfig {
-                    repo_url: "https://api.example.com".to_string()
-                }
-            ],
+            scripts: ScriptConfig {
+                before_commit: "echo hello".to_string().into(),
+            },
+            subprojects: vec![SubprojectConfig {
+                repo_url: "https://api.example.com".to_string(),
+            }],
             transforms: vec![
                 TransformConfig {
                     path: "path_1".to_string(),
                     find: Some("find_1".to_string()),
-                    replace: "replace_1".to_string()
+                    replace: "replace_1".to_string(),
                 },
                 TransformConfig {
                     path: "path_2".to_string(),
                     find: None,
-                    replace: "replace_2".to_string()
-                }
-            ]
+                    replace: "replace_2".to_string(),
+                },
+            ],
         };
         assert_eq!(expected, config)
     }

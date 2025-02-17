@@ -1,21 +1,24 @@
+use crate::project::Project;
 use std::path::{Path, PathBuf};
-use crate::project::{Project};
 
-pub use crate::project::operation::{BumpMode, Operation};
 pub use crate::error::SheepError;
+pub use crate::project::operation::{BumpMode, Operation};
 
-mod repo;
-mod token;
-mod version;
-mod project;
 mod config;
 mod error;
 mod file;
+mod project;
+mod repo;
+mod script;
+mod token;
 mod transform;
+mod version;
 
-pub fn project_update<P: AsRef<Path>>(operation: Operation,
-                                      path: P,
-                                      dry_run: bool) -> Result<(), SheepError> {
+pub fn project_update<P: AsRef<Path>>(
+    operation: Operation,
+    path: P,
+    dry_run: bool,
+) -> Result<(), SheepError> {
     let expanded_path = expand_path(path);
     let project = if dry_run {
         Project::new_dry_run_project(&expanded_path)?
@@ -35,9 +38,9 @@ fn expand_path<P: AsRef<Path>>(path: P) -> PathBuf {
 
 #[cfg(test)]
 mod test {
+    use crate::expand_path;
     use std::env;
     use std::path::Path;
-    use crate::expand_path;
 
     #[test]
     fn expanded_path() {
