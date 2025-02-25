@@ -45,7 +45,7 @@ impl GitCommits {
         })
     }
 
-    fn add_paths<'a>(&'a self, repository: &'a Repository) -> Result<Tree, Error> {
+    fn add_paths<'a>(&'a self, repository: &'a Repository) -> Result<Tree<'a>, Error> {
         let mut index = repository.index()?;
         index.add_all(["*"].iter(), git2::IndexAddOption::DEFAULT, None)?;
         index.write()?;
