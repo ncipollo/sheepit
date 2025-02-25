@@ -42,6 +42,17 @@ pub struct PatchBumpArgs {
     pub repo_path: PathBuf,
 }
 
+#[derive(Args, Debug)]
+#[command(about = "Prints out version information for the repository.")]
+pub struct InfoArgs {
+    #[
+    arg(value_name = "repo",
+    default_value=get_default_path(),
+    value_hint = clap::ValueHint::DirPath)
+    ]
+    pub repo_path: PathBuf,
+}
+
 fn get_default_path() -> OsString {
     env::current_dir()
         .expect("unable to get working directory")

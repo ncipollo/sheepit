@@ -36,6 +36,13 @@ fn expand_path<P: AsRef<Path>>(path: P) -> PathBuf {
     PathBuf::from(expanded.as_ref())
 }
 
+pub fn print_info<P: AsRef<Path>>(path: P) -> Result<(), SheepError> {
+    let expanded_path = expand_path(path);
+    let project = Project::new_local_project(&expanded_path)?;
+    project.print_info();
+    Ok(())
+}
+
 #[cfg(test)]
 mod test {
     use crate::expand_path;

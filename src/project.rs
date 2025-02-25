@@ -194,4 +194,22 @@ impl Project {
 
         Ok(())
     }
+
+    pub fn print_info(&self) {
+        let project_version = ProjectVersion::new(&self);
+        let patch_operation = Operation::BumpVersion(operation::BumpMode::Patch);
+        let minor_operation = Operation::BumpVersion(operation::BumpMode::Minor);
+        let major_operation = Operation::BumpVersion(operation::BumpMode::Major);
+
+        let patch_version = patch_operation.version_update(&project_version);
+        let minor_version = minor_operation.version_update(&project_version);
+        let major_version = major_operation.version_update(&project_version);
+
+        println!("🐑 version info:");
+
+        println!("current version: {}", project_version.current_version());
+        println!("next patch version: {}", patch_version.next_version);
+        println!("next minor version: {}", minor_version.next_version);
+        println!("next major version: {}", major_version.next_version);
+    }
 }
