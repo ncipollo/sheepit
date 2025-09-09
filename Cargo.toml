@@ -21,7 +21,7 @@ parse-git-url = "0.5.1"
 semver = "1.0.26"
 serde = { version = "1.0.188", features = ["derive"] }
 shellexpand = { version = "3.1.0", features = ["full"] }
-tempfile = "3"
+tempfile = "3.21.0"
 toml = "0.9.5"
 
 [dev-dependencies]
